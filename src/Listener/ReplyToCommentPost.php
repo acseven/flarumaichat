@@ -30,11 +30,6 @@ class ReplyToCommentPost
         $actor = $event->actor;
         $discussion = $event->post->discussion;
 
-        // actor-independent kill switch: admins pass every permission check
-        if (!$settings->get('wszdb-flarumaichat.enable_on_reply')) {
-            return;
-        }
-
         if ($discussion->is_private && !$settings->get('wszdb-flarumaichat.reply_in_private')) {
             return;
         }

@@ -64,7 +64,6 @@ return [
     (new Extend\Settings())
         ->default('wszdb-flarumaichat.model', 'gpt-3.5-turbo-instruct')
         ->default('wszdb-flarumaichat.enable_on_discussion_started', true)
-        ->default('wszdb-flarumaichat.enable_on_reply', true)
         ->default('wszdb-flarumaichat.max_tokens', 100)
         ->default('wszdb-flarumaichat.user_prompt_badge_text', 'Assistant')
         ->default('wszdb-flarumaichat.queue_active', true)
