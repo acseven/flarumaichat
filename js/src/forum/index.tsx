@@ -10,9 +10,17 @@ function isBlocked(discussion: any): boolean {
 
   if (!blocked.length) return false;
 
-  return (discussion?.tags() || []).some(
-    (tag: any) => tag && (blocked.includes(Number(tag.id())) || blocked.includes(Number(tag.parent()?.id())))
-  );
+  // a tag the store has not loaded comes back as undefined, and a tag loaded
+  // without its parent has no parent(), so every step is checked before use
+  return (discussion?.tags?.() || []).some((tag: any) => {
+    if (typeof tag?.id !== 'function') return false;
+
+    if (blocked.includes(Number(tag.id()))) return true;
+
+    const parent = typeof tag.parent === 'function' ? tag.parent() : null;
+
+    return typeof parent?.id === 'function' && blocked.includes(Number(parent.id()));
+  });
 }
 
 function triggerReply(post: any) {
