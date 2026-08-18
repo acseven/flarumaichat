@@ -28,8 +28,13 @@ class ReplyToCommentPost
         $settings = resolve(SettingsRepositoryInterface::class);
         $enabledTagIds = $settings->get('wszdb-flarumaichat.enabled-tags', []);
         $enabled = $settings->get('wszdb-flarumaichat.queue_active');
-        $actor = $event->actor;
+        $actor = $event->actor ?? $event->post->user;
         $discussion = $event->post->discussion;
+
+        // the assistant's own answer is a post like any other: never answer it
+        if ($event->post->user_id == $settings->get('wszdb-flarumaichat.user_prompt')) {
+            return;
+        }
 
         if ($discussion->is_private && !$settings->get('wszdb-flarumaichat.reply_in_private')) {
             return;
@@ -47,7 +52,7 @@ class ReplyToCommentPost
             }
         }
 
-        if($actor->can('discussion.useChatGPTAssistant', $discussion) === false) {
+        if (!$actor || $actor->can('discussion.useChatGPTAssistant', $discussion) === false) {
             return;
         }
 

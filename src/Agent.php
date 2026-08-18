@@ -401,6 +401,7 @@ class Agent
             // count, last post and reply notifications stale.
             $events = resolve(Dispatcher::class);
             foreach ($post->releaseEvents() as $event) {
+                $event->actor = $this->user;
                 $events->dispatch($event);
             }
 
