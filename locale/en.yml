@@ -11,8 +11,8 @@ wszdb-flarumaichat:
       model_help: "Learn more about <a>models</a> (default: <code>text-davinci-003</code>)."
       max_tokens_label: Max Tokens
       max_tokens_help: <a>What are tokens and how to count them?</a>
-      user_prompt_label: User Prompt
-      user_prompt_help: Enter the user id that will be used to generate the answer. Default is who started the discussion.
+      user_prompt_label: User ID of Bot
+      user_prompt_help: Enter the id of the forum user that posts the answers.
       user_prompt_badge_label: User Prompt Badge
       user_prompt_badge_help: Text that will be displayed next to the user prompt.
       role_label: Role
