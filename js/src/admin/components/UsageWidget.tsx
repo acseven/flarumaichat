@@ -4,11 +4,11 @@ import Button from 'flarum/common/components/Button';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 
 import UsageStatsModal from './UsageStatsModal';
-import { chart, loadStats, series, short, Stats } from '../usage';
+import { cached, chart, loadStats, series, short, Stats } from '../usage';
 
 export default class UsageWidget extends DashboardWidget {
-  stats: Stats | null = null;
-  loading = true;
+  stats: Stats | null = cached;
+  loading = !cached;
 
   oninit(vnode: any) {
     super.oninit(vnode);

@@ -3,11 +3,11 @@ import Modal from 'flarum/common/components/Modal';
 import Button from 'flarum/common/components/Button';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 
-import { chart, loadStats, number, series, short, stamp, Stats } from '../usage';
+import { cached, chart, loadStats, number, series, short, stamp, Stats } from '../usage';
 
 export default class UsageStatsModal extends Modal {
-  stats: Stats | null = null;
-  loading = true;
+  stats: Stats | null = cached;
+  loading = !cached;
   confirmingReset = false;
 
   oninit(vnode: any) {
@@ -113,7 +113,8 @@ export default class UsageStatsModal extends Modal {
   }
 
   load(reset = false) {
-    this.loading = true;
+    // a spinner only when there is nothing to show yet
+    this.loading = !this.stats;
 
     loadStats(reset)
       .then((stats) => {

@@ -21,11 +21,17 @@ export interface Point {
   value: number;
 }
 
+// ponytail: booting Flarum for the API call costs about half a second, so the
+// last answer is kept and shown while the next one is on its way.
+export let cached: Stats | null = null;
+
 export function loadStats(reset = false): Promise<Stats> {
-  return app.request<Stats>({
-    method: reset ? 'DELETE' : 'GET',
-    url: app.forum.attribute('apiUrl') + '/chatgpt/stats',
-  });
+  return app
+    .request<Stats>({
+      method: reset ? 'DELETE' : 'GET',
+      url: app.forum.attribute('apiUrl') + '/chatgpt/stats',
+    })
+    .then((stats) => (cached = stats));
 }
 
 export function number(value: number): string {
