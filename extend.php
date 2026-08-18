@@ -74,7 +74,7 @@ return [
         // new setting for answer duration in minutes (default 5)
         ->default('wszdb-flarumaichat.answer_duration', 0)
         // extra wait in seconds, added on top of the answer duration
-        ->default('wszdb-flarumaichat.answer_delay', 0)
+        ->default('wszdb-flarumaichat.answer_delay', 5)
         // If any user replied to post, the AI will not reply to that post setting
         ->default('wszdb-flarumaichat.reply_to_post', true)
         ->default('wszdb-flarumaichat.role', 'You are a forum user')

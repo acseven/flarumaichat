@@ -26,7 +26,7 @@ wszdb-flarumaichat:
       answer_duration_label: Answer Duration
       answer_duration_help: Answer duration in minutes. Default is 5 minutes.
       answer_delay_label: Answer Delay
-      answer_delay_help: Extra wait in seconds before answering, added to the Answer Duration. Without a queue worker the site runs the answer inside the posting request, so a wait up to 60 seconds holds that request open and a longer one drops the answer. Default is 0.
+      answer_delay_help: Extra wait in seconds before answering, added to the Answer Duration. Without a queue worker the site runs the answer inside the posting request, so a wait up to 60 seconds holds that request open and a longer one drops the answer. Default is 5.
       enable_on_reply_label: Enable on reply
       enable_on_reply_help: Enable on reply if there is no answer
       continue_to_reply_label: Continue to reply
