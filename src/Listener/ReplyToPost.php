@@ -7,6 +7,7 @@ use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Support\Arr;
 use Wszdb\FlarumAiChat\Agent;
+use Wszdb\FlarumAiChat\Silence;
 use Wszdb\FlarumAiChat\Job\ReplyJob;
 
 class ReplyToPost
@@ -28,9 +29,13 @@ class ReplyToPost
         $enabled = $settings->get('wszdb-flarumaichat.queue_active');
         $enabledTagIds = $settings->get('wszdb-flarumaichat.enabled-tags', []);
         $actor = $event->actor;
+        $discussion = $event->discussion;
+
+        if (Silence::reason($discussion)) {
+            return;
+        }
 
         if ($enabledTagIds = json_decode($enabledTagIds, true)) {
-            $discussion = $event->discussion;
             $tagIds = Arr::pluck($discussion->tags, 'id');
 
             if (!array_intersect($enabledTagIds, $tagIds)) {

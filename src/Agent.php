@@ -4,8 +4,10 @@ namespace Wszdb\FlarumAiChat;
 
 use Flarum\Discussion\Discussion;
 use Flarum\Post\CommentPost;
+use Flarum\Foundation\Paths;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
 use OpenAI;
 use OpenAI\Client;
@@ -40,8 +42,14 @@ class Agent
                 'is_reasoning_model' => $this->isReasoningModel()
             ]);
 
-            $content = $discussion->firstPost->content;
+            $firstPost = $discussion->firstPost ?: $discussion->posts()->where('type', 'comment')->orderBy('number')->first();
+            $content = $firstPost->content ?? '';
             $title = $discussion->title;
+
+            if (trim($content) === '') {
+                $log->warning('[ChatGPT] First post content empty, skipping', ['discussion_id' => $discussion->id]);
+                return;
+            }
 
             ['role' => $role, 'prompt' => $prompt] = $this->prepareChatForMessage();
 
@@ -90,7 +98,7 @@ class Agent
         }
     }
 
-    public function repliesToCommentPost(CommentPost $commentPost): void
+    public function repliesToCommentPost(CommentPost $commentPost, bool $force = false): void
     {
         $log = resolve('log');
 
@@ -108,7 +116,7 @@ class Agent
                 'is_reasoning_model' => $this->isReasoningModel()
             ]);
 
-            if (!$this->checkIfAssistantCanReplyToPost($commentPost)) {
+            if (!$force && !$this->checkIfAssistantCanReplyToPost($commentPost)) {
                 $log->info('[ChatGPT] Assistant cannot reply to this post', [
                     'post_id' => $commentPost->id,
                     'reason' => 'checkIfAssistantCanReplyToPost returned false'
@@ -228,6 +236,16 @@ class Agent
     }
 
 
+    /**
+     * The domain list as z.ai wants it: comma separated, no blanks.
+     */
+    private function searchDomains(string $domains): string
+    {
+        $list = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $domains)));
+
+        return implode(',', $list);
+    }
+
     private function sendCompletionRequest(array $messages)
     {
         $log = resolve('log');
@@ -237,6 +255,24 @@ class Agent
                 'model' => $this->model,
                 'messages' => $messages,
             ];
+
+            // z.ai GLM: thinking tokens consume max_tokens and add ~70s latency
+            if (str_starts_with(strtolower($this->model), 'glm')) {
+                $settings = resolve(SettingsRepositoryInterface::class);
+                $thinking = $settings->get('wszdb-flarumaichat.glm_thinking');
+                $params['thinking'] = ['type' => $thinking ? 'enabled' : 'disabled'];
+
+                if ($settings->get('wszdb-flarumaichat.web_search')) {
+                    $search = ['enable' => true];
+                    $domains = $this->searchDomains((string) $settings->get('wszdb-flarumaichat.web_search_domains'));
+
+                    if ($domains !== '') {
+                        $search['search_domain_filter'] = $domains;
+                    }
+
+                    $params['tools'] = [['type' => 'web_search', 'web_search' => $search]];
+                }
+            }
 
             // Use max_completion_tokens for reasoning models (o1, o3, o4, gpt-5 series)
             // Use max_tokens for legacy models (gpt-3.5, gpt-4, etc.)
@@ -260,6 +296,11 @@ class Agent
                 'choice_count' => count($response->choices ?? [])
             ]);
 
+            Usage::record(
+                (int) ($response->usage->promptTokens ?? 0),
+                (int) ($response->usage->completionTokens ?? 0)
+            );
+
             return $response;
         } catch (\OpenAI\Exceptions\ErrorException $e) {
             $log->error('[ChatGPT] OpenAI API Error', [
@@ -270,6 +311,8 @@ class Agent
                 'token_param' => $this->isReasoningModel() ? 'max_completion_tokens' : 'max_tokens',
                 'token_value' => $this->maxTokens
             ]);
+            Usage::record(failed: true);
+
             throw $e;
         } catch (\Exception $e) {
             $log->error('[ChatGPT] Unexpected error in sendCompletionRequest', [
@@ -277,6 +320,8 @@ class Agent
                 'message' => $e->getMessage(),
                 'model' => $this->model
             ]);
+            Usage::record(failed: true);
+
             throw $e;
         }
     }
@@ -343,12 +388,22 @@ class Agent
                 'content_length' => strlen($respond)
             ]);
 
-            CommentPost::reply(
+            $post = CommentPost::reply(
                 discussionId: $discussionId,
                 content: $respond,
                 userId: $userPrompt,
                 ipAddress: '127.0.0.1'
-            )->save();
+            );
+            $post->save();
+
+            // ponytail: core dispatches the post's pending Posted event in its own
+            // reply handler. Saving the model alone leaves the discussion's comment
+            // count, last post and reply notifications stale.
+            $events = resolve(Dispatcher::class);
+            foreach ($post->releaseEvents() as $event) {
+                $event->actor = $this->user;
+                $events->dispatch($event);
+            }
 
             return true;
         } catch (\Exception $e) {
@@ -362,6 +417,24 @@ class Agent
         }
     }
 
+    /**
+     * Facts about the post's subject, read from the local data files the admin listed.
+     */
+    private function contextFacts(string $text): string
+    {
+        $paths = (string) resolve(SettingsRepositoryInterface::class)->get('wszdb-flarumaichat.context_files');
+
+        if (trim($paths) === '') {
+            return '';
+        }
+
+        $facts = (new ContextFiles(resolve(Paths::class)->base, $paths))->factsFor($text);
+
+        resolve('log')->info('[ChatGPT] Local context', ['chars' => strlen($facts)]);
+
+        return $facts;
+    }
+
     private function createMessages($title, $content, $role, $prompt): array
     {
         $prompt = str_replace(
@@ -370,6 +443,14 @@ class Agent
             $prompt
         );
         $systemPrompt = $role . ' ' . $prompt;
+
+        $facts = $this->contextFacts($title . "\n" . $content);
+
+        if ($facts !== '') {
+            $systemPrompt .= "\n\nFacts below come from this site's own data files. They are current and"
+                . " authoritative: prefer them over what you remember, and never name a version, file or"
+                . " link that is not in them.\n\n" . $facts;
+        }
 
         // Reasoning models (o1, o3, o4, gpt-5) don't support 'system' role
         // Prepend system instructions to first user message instead

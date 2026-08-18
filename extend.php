@@ -16,7 +16,11 @@ use Flarum\Discussion\Event\Started;
 use Flarum\Extend;
 use Flarum\Http\Middleware\HandleErrors;
 use Flarum\Post\Event\Posted;
+use Flarum\Api\Serializer\ForumSerializer;
+use Flarum\Api\Serializer\PostSerializer;
 use Wszdb\FlarumAiChat\Controller\FetchModelsController;
+use Wszdb\FlarumAiChat\Controller\StatsController;
+use Wszdb\FlarumAiChat\Controller\TriggerReplyController;
 use Wszdb\FlarumAiChat\Listener\ReplyToCommentPost;
 use Wszdb\FlarumAiChat\Listener\ReplyToPost;
 use Wszdb\FlarumAiChat\Middleware\ModerationMiddleware;
@@ -42,7 +46,17 @@ return [
     (new Extend\Locales(__DIR__ . '/locale')),
 
     (new Extend\Routes('api'))
-        ->post('/chatgpt/fetch-models', 'chatgpt.fetch-models', FetchModelsController::class),
+        ->post('/chatgpt/fetch-models', 'chatgpt.fetch-models', FetchModelsController::class)
+        ->post('/chatgpt/reply/{id}', 'chatgpt.reply', TriggerReplyController::class)
+        ->get('/chatgpt/stats', 'chatgpt.stats', StatsController::class)
+        ->delete('/chatgpt/stats', 'chatgpt.stats.reset', StatsController::class),
+
+    (new Extend\ApiSerializer(ForumSerializer::class))
+        ->attribute('chatGptBlockedTags', fn () => BlockedTags::ids()),
+
+    (new Extend\ApiSerializer(PostSerializer::class))
+        ->attribute('canTriggerChatGptAssistant', fn ($serializer, $post) => $post->discussion
+            && $serializer->getActor()->can('discussion.triggerChatGPTAssistant', $post->discussion)),
 
     (new Extend\ServiceProvider())
         ->register(BindingsProvider::class)
@@ -61,8 +75,19 @@ return [
         ->default('wszdb-flarumaichat.max_tokens', 100)
         ->default('wszdb-flarumaichat.user_prompt_badge_text', 'Assistant')
         ->default('wszdb-flarumaichat.queue_active', true)
+        // do not answer inside private discussions (fof/byobu) unless enabled
+        ->default('wszdb-flarumaichat.reply_in_private', false)
+        // GLM reasoning: slower and thinking tokens eat max_tokens
+        ->default('wszdb-flarumaichat.glm_thinking', false)
+        // z.ai web search, and the domains it may draw on
+        ->default('wszdb-flarumaichat.web_search', false)
+        ->default('wszdb-flarumaichat.web_search_domains', '')
+        // local data files the answer may quote from
+        ->default('wszdb-flarumaichat.context_files', '')
         // new setting for answer duration in minutes (default 5)
         ->default('wszdb-flarumaichat.answer_duration', 0)
+        // extra wait in seconds, added on top of the answer duration
+        ->default('wszdb-flarumaichat.answer_delay', 5)
         // If any user replied to post, the AI will not reply to that post setting
         ->default('wszdb-flarumaichat.reply_to_post', true)
         ->default('wszdb-flarumaichat.role', 'You are a forum user')
@@ -72,6 +97,7 @@ return [
         ->default('wszdb-flarumaichat.continue_to_reply_count', 5)
         ->default('wszdb-flarumaichat.moderation', false)
         ->default('wszdb-flarumaichat.base_uri', 'https://api.openai.com/v1/')
+        ->default('wszdb-flarumaichat.blocked-tags', '[]')
         ->default('wszdb-flarumaichat.cached_models', '[]')
         ->default('wszdb-flarumaichat.models_last_fetched', 0)
         ->serializeToForum('chatGptUserPromptId', 'wszdb-flarumaichat.user_prompt')

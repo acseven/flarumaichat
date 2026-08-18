@@ -1,6 +1,7 @@
 import app from 'flarum/admin/app';
 import ExtensionPage, { ExtensionPageAttrs } from 'flarum/admin/components/ExtensionPage';
 import Button from 'flarum/common/components/Button';
+import UsageStatsModal from './UsageStatsModal';
 
 // Fallback models in case cached models are not available
 const FALLBACK_MODELS = [
@@ -114,6 +115,11 @@ export default class ChatGptSettings extends ExtensionPage {
       <div className="ExtensionPage-settings">
         <div className="container">
           <div className="Form">
+            <div className="Form-group">
+              <Button className="Button" icon="fas fa-chart-column" onclick={() => app.modal.show(UsageStatsModal)}>
+                {app.translator.trans('wszdb-flarumaichat.admin.usage.button')}
+              </Button>
+            </div>
             {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.api_key',
               type: 'text',
@@ -195,6 +201,12 @@ export default class ChatGptSettings extends ExtensionPage {
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.user_prompt_badge_label'),
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.user_prompt_badge_help'),
             })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.reply_in_private',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.reply_in_private_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.reply_in_private_help'),
+            })}
             {/*new setting for queue_active */}
             {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.queue_active',
@@ -206,6 +218,12 @@ export default class ChatGptSettings extends ExtensionPage {
               setting: 'wszdb-flarumaichat.answer_duration',
               type: 'number',
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.answer_duration_label'),
+            })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.answer_delay',
+              type: 'number',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.answer_delay_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.answer_delay_help'),
             })}
             {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.enable_on_reply',
@@ -232,6 +250,16 @@ export default class ChatGptSettings extends ExtensionPage {
             })}
             {this.buildSettingComponent({
               type: 'flarum-tags.select-tags',
+              setting: 'wszdb-flarumaichat.blocked-tags',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.blocked_tags_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.blocked_tags_help'),
+              options: {
+                requireParentTag: false,
+                limits: { max: { secondary: 0 } },
+              },
+            })}
+            {this.buildSettingComponent({
+              type: 'flarum-tags.select-tags',
               setting: 'wszdb-flarumaichat.enabled-tags',
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.enabled_tags_label'),
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.enabled_tags_help'),
@@ -243,6 +271,36 @@ export default class ChatGptSettings extends ExtensionPage {
                   },
                 },
               },
+            })}
+            <h3 className="ChatGptSettings-heading">
+              <i className="fas fa-database" /> {app.translator.trans('wszdb-flarumaichat.admin.settings.context_heading')}
+            </h3>
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.context_files',
+              type: 'textarea',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.context_files_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.context_files_help'),
+            })}
+            <h3 className="ChatGptSettings-heading">
+              <i className="fas fa-robot" /> {app.translator.trans('wszdb-flarumaichat.admin.settings.zai_heading')}
+            </h3>
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.glm_thinking',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.glm_thinking_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.glm_thinking_help'),
+            })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.web_search',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.web_search_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.web_search_help'),
+            })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.web_search_domains',
+              type: 'textarea',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.web_search_domains_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.web_search_domains_help'),
             })}
             <div className="Form-group">{this.submitButton()}</div>
           </div>

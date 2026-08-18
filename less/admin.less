@@ -1,0 +1,142 @@
+
+.ChatGptSettings-heading {
+  margin: 30px 0 10px;
+  padding-top: 15px;
+  border-top: 1px solid var(--control-bg);
+
+  i {
+    margin-right: 8px;
+    opacity: 0.6;
+  }
+}
+
+.ChatGptUsage {
+  h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 15px;
+  }
+
+  &-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  &-card {
+    padding: 10px 12px;
+    border-radius: @border-radius;
+    background: @control-bg;
+  }
+
+  &-card--warn &-cardValue {
+    color: @error-color;
+  }
+
+  &-cardValue {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  &-cardLabel {
+    margin-top: 2px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: @muted-color;
+  }
+
+  &-chart {
+    margin-bottom: 18px;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 60px;
+
+      rect {
+        fill: @primary-color;
+      }
+    }
+  }
+
+  &-chartHead,
+  &-chartFoot {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: @muted-color;
+  }
+
+  &-chartHead {
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  &-chartFoot {
+    margin-top: 4px;
+  }
+
+  &-columns {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 25px;
+
+    h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: @muted-color;
+      margin: 0 0 6px;
+    }
+  }
+
+  &-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 3px 0;
+    border-bottom: 1px solid @control-bg;
+
+    span:last-child {
+      font-weight: 600;
+      text-align: right;
+    }
+  }
+
+  &-more {
+    margin-top: 10px;
+    text-align: right;
+  }
+}
+
+@media (max-width: 767px) {
+  .ChatGptUsage-cards,
+  .ChatGptUsage-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.ChatGptUsageWidget {
+  .ChatGptUsage-widgetBody {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+    align-items: center;
+  }
+
+  .ChatGptUsage-cards,
+  .ChatGptUsage-chart {
+    margin-bottom: 0;
+  }
+
+  .ChatGptUsage-chart svg {
+    height: 44px;
+  }
+}
+
+@media (max-width: 767px) {
+  .ChatGptUsageWidget .ChatGptUsage-widgetBody {
+    grid-template-columns: 1fr;
+  }
+}

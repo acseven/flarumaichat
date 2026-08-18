@@ -7,6 +7,7 @@ use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Support\Arr;
 use Wszdb\FlarumAiChat\Agent;
+use Wszdb\FlarumAiChat\Silence;
 use Wszdb\FlarumAiChat\Job\ReplyPostJob;
 
 class ReplyToCommentPost
@@ -28,9 +29,18 @@ class ReplyToCommentPost
         $enabledTagIds = $settings->get('wszdb-flarumaichat.enabled-tags', []);
         $enabled = $settings->get('wszdb-flarumaichat.queue_active');
         $actor = $event->actor;
+        $discussion = $event->post->discussion;
+
+        // the assistant's own answer is a post like any other: never answer it
+        if ($event->post->user_id == $settings->get('wszdb-flarumaichat.user_prompt')) {
+            return;
+        }
+
+        if (Silence::reason($discussion)) {
+            return;
+        }
 
         if ($enabledTagIds = json_decode($enabledTagIds, true)) {
-            $discussion = $event->post->discussion;
             $tagIds = Arr::pluck($discussion->tags, 'id');
 
             if (!array_intersect($enabledTagIds, $tagIds)) {
@@ -38,7 +48,7 @@ class ReplyToCommentPost
             }
         }
 
-        if($actor->can('discussion.useChatGPTAssistant', $discussion) === false) {
+        if (!$actor || $actor->can('discussion.useChatGPTAssistant', $discussion) === false) {
             return;
         }
 

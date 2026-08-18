@@ -2,6 +2,32 @@ wszdb-flarumaichat:
   # For more details on the format
   # Checkout https://docs.flarum.org/extend/i18n/#appendix-a-standard-key-format
   admin:
+    usage:
+      button: View usage stats
+      title: Assistant usage
+      api_heading: API calls
+      posts_heading: Answers posted
+      model: Model
+      requests: Requests
+      failures: Failed requests
+      prompt_tokens: Prompt tokens
+      completion_tokens: Completion tokens
+      total_tokens: Total tokens
+      avg_tokens: Tokens per request
+      since: Counting since
+      last: Last request
+      answers: Answers
+      answers_7d: Last 7 days
+      answers_30d: Last 30 days
+      discussions: Discussions answered
+      avg_length: Average answer length
+      first_answer: First answer
+      last_answer: Last answer
+      chart_answers: Answers per day
+      chart_tokens: Tokens per day
+      help: Token counts start at the moment this version was installed. Answer counts come from the posts of the bot user.
+      reset: Reset counters
+      reset_confirm: Click again to reset
     settings:
       api_key_label: API Key
       api_key_help: Get the OpenAI API key from <a>openai.com</a>.
@@ -11,8 +37,8 @@ wszdb-flarumaichat:
       model_help: "Learn more about <a>models</a> (default: <code>text-davinci-003</code>)."
       max_tokens_label: Max Tokens
       max_tokens_help: <a>What are tokens and how to count them?</a>
-      user_prompt_label: User Prompt
-      user_prompt_help: Enter the user id that will be used to generate the answer. Default is who started the discussion.
+      user_prompt_label: User ID of Bot
+      user_prompt_help: Enter the id of the forum user that posts the answers.
       user_prompt_badge_label: User Prompt Badge
       user_prompt_badge_help: Text that will be displayed next to the user prompt.
       role_label: Role
@@ -21,16 +47,32 @@ wszdb-flarumaichat:
       prompt_help: Enter the prompt that will be used to generate the answer. [title] variable should be kept constant.
       enable_on_discussion_started_label: Enable on discussion started
       enable_on_discussion_started_help: The discussion will receive an answer based on content of first post when the discussion is started.
+      blocked_tags_label: Blocked tags
+      blocked_tags_help: The assistant stays silent in discussions carrying one of these tags, for everybody including admins, and the "Ask the assistant" post control is hidden there. Blocking a primary tag blocks its child tags too.
       enabled_tags_label: Enabled Tags
       enabled_tags_help: Select which tags will be used to generate the answer.
       answer_duration_label: Answer Duration
       answer_duration_help: Answer duration in minutes. Default is 5 minutes.
+      answer_delay_label: Answer Delay
+      answer_delay_help: Extra wait in seconds before answering, added to the Answer Duration. Without a queue worker the site runs the answer inside the posting request, so a wait up to 60 seconds holds that request open and a longer one drops the answer. Default is 5.
       enable_on_reply_label: Enable on reply
       enable_on_reply_help: Enable on reply if there is no answer
       continue_to_reply_label: Continue to reply
       continue_to_reply_help: Continue to reply if there is an answer
       continue_to_reply_count_label: Continue to reply count
       continue_to_reply_count_help: How many times the bot will continue to reply. Default is 5.
+      zai_heading: Z.AI / GLM
+      context_heading: Site data
+      context_files_label: Data files
+      context_files_help: "One path per line, relative to the Flarum installation, for example vendor/acseven/chdk-cameras/resources/cameras.json. A JSON file holding a list of records is searched record by record: a record named in the post is handed to the model as fact. Any other file is passed as plain text, and a plain file goes to the model whole with every single answer, whatever the post is about, so only list files whose full content may leave the site. Leave empty to feed nothing."
+      web_search_label: Web search
+      web_search_help: Let the model search the web while it answers. GLM models only, charged per search by z.ai, and it adds seconds to the answer.
+      web_search_domains_label: Search only these domains
+      web_search_domains_help: "One domain per line, for example chdk.fandom.com. Leave empty to search the whole web."
+      glm_thinking_label: GLM thinking
+      glm_thinking_help: Only for GLM models. Lets the model reason before answering. Slower (~70s vs ~15s) and the thinking tokens count against Max Tokens, so raise Max Tokens if you turn this on. Default is off.
+      reply_in_private_label: Reply in private discussions
+      reply_in_private_help: When off, the bot ignores private discussions and private messages. Default is off.
       queue_active_label: Queue Active
       queue_active_help: When the queue is activated, the bot is added to the queue to respond.
       moderation_label: Moderation
@@ -44,5 +86,15 @@ wszdb-flarumaichat:
 
     permissions:
       use_chatgpt_assistant_label: Use ChatGPT Assistant
+      trigger_chatgpt_assistant_label: Ask the assistant to answer a post
 
   forum:
+    post_controls:
+      trigger_assistant: Ask the assistant
+      trigger_started: Asking the assistant, this takes a few seconds...
+      error_blocked_tags: The assistant is blocked in this discussion's tags.
+      error_private: The assistant does not answer in private discussions.
+      error_not_comment: Only comments can be answered.
+      error_failed: The assistant failed to answer. Check the server log.
+      error_no_answer: The assistant had no answer for this post. Check the server log.
+

@@ -9,11 +9,19 @@ use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Wszdb\FlarumAiChat\Agent;
+use Wszdb\FlarumAiChat\Silence;
 
 class ReplyPostJob extends AbstractJob
 {
     use Queueable;
     use SerializesModels;
+    use DelaysReply;
+
+    /**
+     * Waiting for the answer to fall due releases the job, and a release counts
+     * as an attempt, so one try is never enough.
+     */
+    public $tries = 5;
 
     public function __construct(protected CommentPost $post)
     {
@@ -31,20 +39,23 @@ class ReplyPostJob extends AbstractJob
                 'created_at' => $this->post->created_at->toDateTimeString()
             ]);
 
-            $settings = resolve(SettingsRepositoryInterface::class);
-            $duration = $settings->get('wszdb-flarumaichat.answer_duration');
-
-            // check if the discussion is greater or equal to the duration
-            if ($this->post->created_at->diffInMinutes() < $duration) {
-                $log->info('[ChatGPT Job] Post too recent, releasing job', [
-                    'post_id' => $this->post->id,
-                    'age_minutes' => $this->post->created_at->diffInMinutes(),
-                    'required_duration' => $duration
-                ]);
-                // if the discussion is less than the duration, dont do anything but do not delete from the queue
-                $this->release(60);
+            if ($this->holdBack($this->post->created_at, ['post_id' => $this->post->id])) {
                 return;
             }
+
+            // the answer waited, so the discussion may have been made private
+            // or given a blocked tag since the listener queued this job
+            $post = $this->post->fresh();
+
+            if (!$post || !$post->discussion || ($reason = Silence::reason($post->discussion))) {
+                $log->info('[ChatGPT Job] Skipping - the assistant must stay out of this discussion', [
+                    'post_id' => $this->post->id,
+                    'reason' => $post && $post->discussion ? $reason : 'gone'
+                ]);
+                return;
+            }
+
+            $settings = resolve(SettingsRepositoryInterface::class);
 
             $continueToReply = $settings->get('wszdb-flarumaichat.continue_to_reply');
             if (!$continueToReply) {
@@ -59,7 +70,7 @@ class ReplyPostJob extends AbstractJob
                 'post_id' => $this->post->id
             ]);
 
-            $agent->repliesToCommentPost($this->post);
+            $agent->repliesToCommentPost($post);
 
             $log->info('[ChatGPT Job] ReplyPostJob completed successfully', [
                 'post_id' => $this->post->id
