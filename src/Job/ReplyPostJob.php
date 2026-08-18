@@ -16,6 +16,12 @@ class ReplyPostJob extends AbstractJob
     use SerializesModels;
     use DelaysReply;
 
+    /**
+     * Waiting for the answer to fall due releases the job, and a release counts
+     * as an attempt, so one try is never enough.
+     */
+    public $tries = 5;
+
     public function __construct(protected CommentPost $post)
     {
     }
