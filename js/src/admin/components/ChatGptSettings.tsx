@@ -196,12 +196,6 @@ export default class ChatGptSettings extends ExtensionPage {
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.user_prompt_badge_help'),
             })}
             {this.buildSettingComponent({
-              setting: 'wszdb-flarumaichat.glm_thinking',
-              type: 'boolean',
-              label: app.translator.trans('wszdb-flarumaichat.admin.settings.glm_thinking_label'),
-              help: app.translator.trans('wszdb-flarumaichat.admin.settings.glm_thinking_help'),
-            })}
-            {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.reply_in_private',
               type: 'boolean',
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.reply_in_private_label'),
@@ -271,6 +265,36 @@ export default class ChatGptSettings extends ExtensionPage {
                   },
                 },
               },
+            })}
+            <h3 className="ChatGptSettings-heading">
+              <i className="fas fa-database" /> {app.translator.trans('wszdb-flarumaichat.admin.settings.context_heading')}
+            </h3>
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.context_files',
+              type: 'textarea',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.context_files_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.context_files_help'),
+            })}
+            <h3 className="ChatGptSettings-heading">
+              <i className="fas fa-robot" /> {app.translator.trans('wszdb-flarumaichat.admin.settings.zai_heading')}
+            </h3>
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.glm_thinking',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.glm_thinking_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.glm_thinking_help'),
+            })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.web_search',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.web_search_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.web_search_help'),
+            })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.web_search_domains',
+              type: 'textarea',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.web_search_domains_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.web_search_domains_help'),
             })}
             <div className="Form-group">{this.submitButton()}</div>
           </div>

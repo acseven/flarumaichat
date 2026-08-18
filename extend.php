@@ -72,6 +72,11 @@ return [
         ->default('wszdb-flarumaichat.reply_in_private', false)
         // GLM reasoning: slower and thinking tokens eat max_tokens
         ->default('wszdb-flarumaichat.glm_thinking', false)
+        // z.ai web search, and the domains it may draw on
+        ->default('wszdb-flarumaichat.web_search', false)
+        ->default('wszdb-flarumaichat.web_search_domains', '')
+        // local data files the answer may quote from
+        ->default('wszdb-flarumaichat.context_files', '')
         // new setting for answer duration in minutes (default 5)
         ->default('wszdb-flarumaichat.answer_duration', 0)
         // extra wait in seconds, added on top of the answer duration

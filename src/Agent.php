@@ -4,6 +4,7 @@ namespace Wszdb\FlarumAiChat;
 
 use Flarum\Discussion\Discussion;
 use Flarum\Post\CommentPost;
+use Flarum\Foundation\Paths;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
 use Illuminate\Support\Arr;
@@ -234,6 +235,16 @@ class Agent
     }
 
 
+    /**
+     * The domain list as z.ai wants it: comma separated, no blanks.
+     */
+    private function searchDomains(string $domains): string
+    {
+        $list = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $domains)));
+
+        return implode(',', $list);
+    }
+
     private function sendCompletionRequest(array $messages)
     {
         $log = resolve('log');
@@ -246,8 +257,20 @@ class Agent
 
             // z.ai GLM: thinking tokens consume max_tokens and add ~70s latency
             if (str_starts_with(strtolower($this->model), 'glm')) {
-                $thinking = resolve(SettingsRepositoryInterface::class)->get('wszdb-flarumaichat.glm_thinking');
+                $settings = resolve(SettingsRepositoryInterface::class);
+                $thinking = $settings->get('wszdb-flarumaichat.glm_thinking');
                 $params['thinking'] = ['type' => $thinking ? 'enabled' : 'disabled'];
+
+                if ($settings->get('wszdb-flarumaichat.web_search')) {
+                    $search = ['enable' => true];
+                    $domains = $this->searchDomains((string) $settings->get('wszdb-flarumaichat.web_search_domains'));
+
+                    if ($domains !== '') {
+                        $search['search_domain_filter'] = $domains;
+                    }
+
+                    $params['tools'] = [['type' => 'web_search', 'web_search' => $search]];
+                }
             }
 
             // Use max_completion_tokens for reasoning models (o1, o3, o4, gpt-5 series)
@@ -379,6 +402,24 @@ class Agent
         }
     }
 
+    /**
+     * Facts about the post's subject, read from the local data files the admin listed.
+     */
+    private function contextFacts(string $text): string
+    {
+        $paths = (string) resolve(SettingsRepositoryInterface::class)->get('wszdb-flarumaichat.context_files');
+
+        if (trim($paths) === '') {
+            return '';
+        }
+
+        $facts = (new ContextFiles(resolve(Paths::class)->base, $paths))->factsFor($text);
+
+        resolve('log')->info('[ChatGPT] Local context', ['chars' => strlen($facts)]);
+
+        return $facts;
+    }
+
     private function createMessages($title, $content, $role, $prompt): array
     {
         $prompt = str_replace(
@@ -387,6 +428,14 @@ class Agent
             $prompt
         );
         $systemPrompt = $role . ' ' . $prompt;
+
+        $facts = $this->contextFacts($title . "\n" . $content);
+
+        if ($facts !== '') {
+            $systemPrompt .= "\n\nFacts below come from this site's own data files. They are current and"
+                . " authoritative: prefer them over what you remember, and never name a version, file or"
+                . " link that is not in them.\n\n" . $facts;
+        }
 
         // Reasoning models (o1, o3, o4, gpt-5) don't support 'system' role
         // Prepend system instructions to first user message instead
