@@ -7,6 +7,7 @@ use Flarum\Post\CommentPost;
 use Flarum\Foundation\Paths;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
 use OpenAI;
 use OpenAI\Client;
@@ -383,12 +384,21 @@ class Agent
                 'content_length' => strlen($respond)
             ]);
 
-            CommentPost::reply(
+            $post = CommentPost::reply(
                 discussionId: $discussionId,
                 content: $respond,
                 userId: $userPrompt,
                 ipAddress: '127.0.0.1'
-            )->save();
+            );
+            $post->save();
+
+            // ponytail: core dispatches the post's pending Posted event in its own
+            // reply handler. Saving the model alone leaves the discussion's comment
+            // count, last post and reply notifications stale.
+            $events = resolve(Dispatcher::class);
+            foreach ($post->releaseEvents() as $event) {
+                $events->dispatch($event);
+            }
 
             return true;
         } catch (\Exception $e) {
