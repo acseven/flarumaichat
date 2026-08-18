@@ -2,6 +2,30 @@ wszdb-flarumaichat:
   # For more details on the format
   # Checkout https://docs.flarum.org/extend/i18n/#appendix-a-standard-key-format
   admin:
+    usage:
+      button: View usage stats
+      title: Assistant usage
+      api_heading: API calls
+      posts_heading: Answers posted
+      model: Model
+      requests: Requests
+      failures: Failed requests
+      prompt_tokens: Prompt tokens
+      completion_tokens: Completion tokens
+      total_tokens: Total tokens
+      avg_tokens: Tokens per request
+      since: Counting since
+      last: Last request
+      answers: Answers
+      answers_7d: Last 7 days
+      answers_30d: Last 30 days
+      discussions: Discussions answered
+      avg_length: Average answer length
+      first_answer: First answer
+      last_answer: Last answer
+      help: Token counts start at the moment this version was installed. Answer counts come from the posts of the bot user.
+      reset: Reset counters
+      reset_confirm: Click again to reset
     settings:
       api_key_label: API Key
       api_key_help: Get the OpenAI API key from <a>openai.com</a>.

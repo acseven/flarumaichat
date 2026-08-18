@@ -296,6 +296,11 @@ class Agent
                 'choice_count' => count($response->choices ?? [])
             ]);
 
+            Usage::record(
+                (int) ($response->usage->promptTokens ?? 0),
+                (int) ($response->usage->completionTokens ?? 0)
+            );
+
             return $response;
         } catch (\OpenAI\Exceptions\ErrorException $e) {
             $log->error('[ChatGPT] OpenAI API Error', [
@@ -306,6 +311,8 @@ class Agent
                 'token_param' => $this->isReasoningModel() ? 'max_completion_tokens' : 'max_tokens',
                 'token_value' => $this->maxTokens
             ]);
+            Usage::record(failed: true);
+
             throw $e;
         } catch (\Exception $e) {
             $log->error('[ChatGPT] Unexpected error in sendCompletionRequest', [
@@ -313,6 +320,8 @@ class Agent
                 'message' => $e->getMessage(),
                 'model' => $this->model
             ]);
+            Usage::record(failed: true);
+
             throw $e;
         }
     }

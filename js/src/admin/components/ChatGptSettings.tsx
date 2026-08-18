@@ -1,6 +1,7 @@
 import app from 'flarum/admin/app';
 import ExtensionPage, { ExtensionPageAttrs } from 'flarum/admin/components/ExtensionPage';
 import Button from 'flarum/common/components/Button';
+import UsageStatsModal from './UsageStatsModal';
 
 // Fallback models in case cached models are not available
 const FALLBACK_MODELS = [
@@ -114,6 +115,11 @@ export default class ChatGptSettings extends ExtensionPage {
       <div className="ExtensionPage-settings">
         <div className="container">
           <div className="Form">
+            <div className="Form-group">
+              <Button className="Button" icon="fas fa-chart-column" onclick={() => app.modal.show(UsageStatsModal)}>
+                {app.translator.trans('wszdb-flarumaichat.admin.usage.button')}
+              </Button>
+            </div>
             {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.api_key',
               type: 'text',
