@@ -250,6 +250,16 @@ export default class ChatGptSettings extends ExtensionPage {
             })}
             {this.buildSettingComponent({
               type: 'flarum-tags.select-tags',
+              setting: 'wszdb-flarumaichat.blocked-tags',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.blocked_tags_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.blocked_tags_help'),
+              options: {
+                requireParentTag: false,
+                limits: { max: { secondary: 0 } },
+              },
+            })}
+            {this.buildSettingComponent({
+              type: 'flarum-tags.select-tags',
               setting: 'wszdb-flarumaichat.enabled-tags',
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.enabled_tags_label'),
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.enabled_tags_help'),

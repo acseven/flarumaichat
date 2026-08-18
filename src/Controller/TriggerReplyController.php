@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Wszdb\FlarumAiChat\Agent;
+use Wszdb\FlarumAiChat\BlockedTags;
 
 /**
  * Makes the assistant answer one post on demand, for staff who hold the
@@ -33,6 +34,10 @@ class TriggerReplyController implements RequestHandlerInterface
         }
 
         $post = $this->posts->findOrFail(Arr::get($request->getQueryParams(), 'id'), $actor);
+
+        if (BlockedTags::block($post->discussion)) {
+            return new JsonResponse(['error' => 'The assistant is blocked in this discussion\'s tags.'], 403);
+        }
 
         if ($post->type !== 'comment') {
             return new JsonResponse(['error' => 'Only comments can be answered.'], 422);

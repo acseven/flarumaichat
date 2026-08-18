@@ -48,7 +48,8 @@ return [
         ->post('/chatgpt/reply/{id}', 'chatgpt.reply', TriggerReplyController::class),
 
     (new Extend\ApiSerializer(ForumSerializer::class))
-        ->attribute('canTriggerChatGptAssistant', fn ($serializer) => $serializer->getActor()->hasPermission('discussion.triggerChatGPTAssistant')),
+        ->attribute('canTriggerChatGptAssistant', fn ($serializer) => $serializer->getActor()->hasPermission('discussion.triggerChatGPTAssistant'))
+        ->attribute('chatGptBlockedTags', fn () => BlockedTags::ids()),
 
     (new Extend\ServiceProvider())
         ->register(BindingsProvider::class)
@@ -84,6 +85,7 @@ return [
         ->default('wszdb-flarumaichat.continue_to_reply_count', 5)
         ->default('wszdb-flarumaichat.moderation', false)
         ->default('wszdb-flarumaichat.base_uri', 'https://api.openai.com/v1/')
+        ->default('wszdb-flarumaichat.blocked-tags', '[]')
         ->default('wszdb-flarumaichat.cached_models', '[]')
         ->default('wszdb-flarumaichat.models_last_fetched', 0)
         ->serializeToForum('chatGptUserPromptId', 'wszdb-flarumaichat.user_prompt')

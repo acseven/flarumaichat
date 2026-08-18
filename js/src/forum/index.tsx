@@ -4,6 +4,17 @@ import Button from 'flarum/common/components/Button';
 import PostUser from 'flarum/forum/components/PostUser';
 import PostControls from 'flarum/forum/utils/PostControls';
 
+// mirrors BlockedTags::block() on the server, so the control is not offered where it would be refused
+function isBlocked(discussion: any): boolean {
+  const blocked: number[] = app.forum.attribute('chatGptBlockedTags') || [];
+
+  if (!blocked.length) return false;
+
+  return (discussion?.tags() || []).some(
+    (tag: any) => tag && (blocked.includes(Number(tag.id())) || blocked.includes(Number(tag.parent()?.id())))
+  );
+}
+
 function triggerReply(post: any) {
   app.alerts.show({ type: 'warning' }, app.translator.trans('wszdb-flarumaichat.forum.post_controls.trigger_started'));
 
@@ -36,6 +47,7 @@ app.initializers.add('wszdb-flarumaichat', () => {
   extend(PostControls, 'moderationControls', function (items: any, post: any) {
     if (!app.forum.attribute('canTriggerChatGptAssistant')) return;
     if (post.contentType() !== 'comment' || post.isHidden()) return;
+    if (isBlocked(post.discussion())) return;
 
     items.add(
       'triggerChatGptAssistant',
