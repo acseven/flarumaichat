@@ -64,11 +64,11 @@ wszdb-flarumaichat:
       zai_heading: Z.AI / GLM
       context_heading: Site data
       context_files_label: Data files
-      context_files_help: "One path per line, relative to the Flarum installation, for example vendor/acseven/chdk-cameras/resources/cameras.json. A JSON file holding a list of records is searched record by record: a record named in the post is handed to the model as fact. Any other file is passed as plain text, and a plain file goes to the model whole with every single answer, whatever the post is about, so only list files whose full content may leave the site. Leave empty to feed nothing."
+      context_files_help: "One path per line, relative to the Flarum installation, for example vendor/acme/site-data/resources/products.json. A JSON file holding a list of records is searched record by record: a record named in the post is handed to the model as fact. Any other file is passed as plain text, and a plain file goes to the model whole with every single answer, whatever the post is about, so only list files whose full content may leave the site. Leave empty to feed nothing."
       web_search_label: Web search
       web_search_help: Let the model search the web while it answers. GLM models only, charged per search by z.ai, and it adds seconds to the answer.
       web_search_domains_label: Search only these domains
-      web_search_domains_help: "One domain per line, for example chdk.fandom.com. Leave empty to search the whole web."
+      web_search_domains_help: "One domain per line, for example wiki.example.com. Leave empty to search the whole web."
       glm_thinking_label: GLM thinking
       glm_thinking_help: Only for GLM models. Lets the model reason before answering. Slower (~70s vs ~15s) and the thinking tokens count against Max Tokens, so raise Max Tokens if you turn this on. Default is off.
       reply_in_private_label: Reply in private discussions
