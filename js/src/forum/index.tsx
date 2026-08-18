@@ -30,6 +30,10 @@ function triggerReply(post: any) {
     .request({
       method: 'POST',
       url: app.forum.attribute('apiUrl') + '/chatgpt/reply/' + post.id(),
+      // core only surfaces the error detail on a 422, and the endpoint refuses with 403 and 500 too
+      errorHandler: (e: any) => {
+        app.alerts.show({ type: 'error' }, e.response?.errors?.[0]?.detail || e.alert?.content);
+      },
     })
     // the answer is a new post at the end of the stream, easiest way to show it is a reload
     .then(() => window.location.reload());

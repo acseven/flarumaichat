@@ -4,12 +4,14 @@ namespace Wszdb\FlarumAiChat\Controller;
 
 use Flarum\Http\RequestUtil;
 use Flarum\Post\PostRepository;
+use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Exception\PermissionDeniedException;
 use Illuminate\Support\Arr;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Wszdb\FlarumAiChat\Agent;
 use Wszdb\FlarumAiChat\BlockedTags;
 
@@ -21,8 +23,21 @@ class TriggerReplyController implements RequestHandlerInterface
 {
     public function __construct(
         protected PostRepository $posts,
-        protected Agent $agent
+        protected Agent $agent,
+        protected SettingsRepositoryInterface $settings,
+        protected TranslatorInterface $translator
     ) {
+    }
+
+    /**
+     * Flarum only shows the detail of a JSON:API error to the user, so refusals
+     * have to carry their message in that shape.
+     */
+    private function refuse(string $key, int $status): JsonResponse
+    {
+        $detail = $this->translator->trans('wszdb-flarumaichat.forum.post_controls.'.$key);
+
+        return new JsonResponse(['errors' => [['status' => (string) $status, 'detail' => $detail]]], $status);
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
@@ -36,24 +51,35 @@ class TriggerReplyController implements RequestHandlerInterface
         $post = $this->posts->findOrFail(Arr::get($request->getQueryParams(), 'id'), $actor);
 
         if (BlockedTags::block($post->discussion)) {
-            return new JsonResponse(['error' => 'The assistant is blocked in this discussion\'s tags.'], 403);
+            return $this->refuse('error_blocked_tags', 403);
+        }
+
+        if ($post->discussion->is_private && !$this->settings->get('wszdb-flarumaichat.reply_in_private')) {
+            return $this->refuse('error_private', 403);
         }
 
         if ($post->type !== 'comment') {
-            return new JsonResponse(['error' => 'Only comments can be answered.'], 422);
+            return $this->refuse('error_not_comment', 422);
         }
 
         $before = $post->discussion->posts()->count();
 
-        if ($post->number == 1) {
-            $this->agent->repliesTo($post->discussion);
-        } else {
-            $this->agent->repliesToCommentPost($post, true);
+        try {
+            if ($post->number == 1) {
+                $this->agent->repliesTo($post->discussion);
+            } else {
+                $this->agent->repliesToCommentPost($post, true);
+            }
+        } catch (\Exception $e) {
+            // the agent already logged it; the job path needs the throw to retry, this path does not
+            return $this->refuse('error_failed', 500);
         }
 
-        // the agent logs and swallows its own failures, so compare post counts
-        $answered = $post->discussion->posts()->count() > $before;
+        // the agent can also bail without an error (moderation, empty content), so compare post counts
+        if ($post->discussion->posts()->count() === $before) {
+            return $this->refuse('error_no_answer', 500);
+        }
 
-        return new JsonResponse(['answered' => $answered], $answered ? 200 : 500);
+        return new JsonResponse(['answered' => true], 200);
     }
 }

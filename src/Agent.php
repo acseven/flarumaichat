@@ -94,7 +94,7 @@ class Agent
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return;
+            throw $e;
         }
     }
 
@@ -191,7 +191,7 @@ class Agent
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return;
+            throw $e;
         }
     }
 

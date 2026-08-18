@@ -92,4 +92,9 @@ wszdb-flarumaichat:
     post_controls:
       trigger_assistant: Ask the assistant
       trigger_started: Asking the assistant, this takes a few seconds...
+      error_blocked_tags: The assistant is blocked in this discussion's tags.
+      error_private: The assistant does not answer in private discussions.
+      error_not_comment: Only comments can be answered.
+      error_failed: The assistant failed to answer. Check the server log.
+      error_no_answer: The assistant had no answer for this post. Check the server log.
 
