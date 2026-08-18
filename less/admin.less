@@ -116,3 +116,27 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.ChatGptUsageWidget {
+  .ChatGptUsage-widgetBody {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+    align-items: center;
+  }
+
+  .ChatGptUsage-cards,
+  .ChatGptUsage-chart {
+    margin-bottom: 0;
+  }
+
+  .ChatGptUsage-chart svg {
+    height: 44px;
+  }
+}
+
+@media (max-width: 767px) {
+  .ChatGptUsageWidget .ChatGptUsage-widgetBody {
+    grid-template-columns: 1fr;
+  }
+}

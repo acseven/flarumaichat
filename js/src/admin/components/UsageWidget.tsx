@@ -44,29 +44,28 @@ export default class UsageWidget extends DashboardWidget {
   figures(stats: Stats) {
     const tokens = (stats.api.prompt_tokens || 0) + (stats.api.completion_tokens || 0);
 
-    return [
-      <div className="ChatGptUsage-cards">
-        <div className="ChatGptUsage-card">
-          <div className="ChatGptUsage-cardValue">{short(stats.posts ? stats.posts.answers : 0)}</div>
-          <div className="ChatGptUsage-cardLabel">{app.translator.trans('wszdb-flarumaichat.admin.usage.answers')}</div>
+    return (
+      <div className="ChatGptUsage-widgetBody">
+        <div className="ChatGptUsage-cards">
+          {this.card('answers', short(stats.posts ? stats.posts.answers : 0))}
+          {this.card('requests', short(stats.api.requests))}
+          {this.card('total_tokens', short(tokens))}
+          {this.card('failures', short(stats.api.failures), stats.api.failures > 0)}
         </div>
-        <div className="ChatGptUsage-card">
-          <div className="ChatGptUsage-cardValue">{short(stats.api.requests)}</div>
-          <div className="ChatGptUsage-cardLabel">{app.translator.trans('wszdb-flarumaichat.admin.usage.requests')}</div>
-        </div>
-        <div className="ChatGptUsage-card">
-          <div className="ChatGptUsage-cardValue">{short(tokens)}</div>
-          <div className="ChatGptUsage-cardLabel">{app.translator.trans('wszdb-flarumaichat.admin.usage.total_tokens')}</div>
-        </div>
-        <div className={'ChatGptUsage-card' + (stats.api.failures ? ' ChatGptUsage-card--warn' : '')}>
-          <div className="ChatGptUsage-cardValue">{short(stats.api.failures)}</div>
-          <div className="ChatGptUsage-cardLabel">{app.translator.trans('wszdb-flarumaichat.admin.usage.failures')}</div>
-        </div>
-      </div>,
-      chart(
-        series(stats.answers_daily, (value) => Number(value)),
-        app.translator.trans('wszdb-flarumaichat.admin.usage.chart_answers')
-      ),
-    ];
+        {chart(
+          series(stats.answers_daily, (value) => Number(value)),
+          app.translator.trans('wszdb-flarumaichat.admin.usage.chart_answers')
+        )}
+      </div>
+    );
+  }
+
+  card(key: string, value: string, warn = false) {
+    return (
+      <div className={'ChatGptUsage-card' + (warn ? ' ChatGptUsage-card--warn' : '')}>
+        <div className="ChatGptUsage-cardValue">{value}</div>
+        <div className="ChatGptUsage-cardLabel">{app.translator.trans('wszdb-flarumaichat.admin.usage.' + key)}</div>
+      </div>
+    );
   }
 }
