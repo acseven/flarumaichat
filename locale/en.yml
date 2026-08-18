@@ -23,6 +23,8 @@ wszdb-flarumaichat:
       avg_length: Average answer length
       first_answer: First answer
       last_answer: Last answer
+      chart_answers: Answers per day
+      chart_tokens: Tokens per day
       help: Token counts start at the moment this version was installed. Answer counts come from the posts of the bot user.
       reset: Reset counters
       reset_confirm: Click again to reset

@@ -3,24 +3,7 @@ import Modal from 'flarum/common/components/Modal';
 import Button from 'flarum/common/components/Button';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 
-interface Stats {
-  api: { requests: number; failures: number; prompt_tokens: number; completion_tokens: number; since: number; last: number };
-  posts: { answers: number; answers_7d: number; answers_30d: number; discussions: number; first_at: string; last_at: string; avg_length: number } | null;
-  model: string;
-}
-
-function number(value: number): string {
-  return Number(value || 0).toLocaleString();
-}
-
-function stamp(value: number | string | null): string {
-  if (!value) return '—';
-
-  // the API sends unix seconds for its own counters and MySQL datetimes (UTC) for posts
-  const date = typeof value === 'number' ? new Date(value * 1000) : new Date(String(value).replace(' ', 'T') + 'Z');
-
-  return date.toLocaleString();
-}
+import { chart, loadStats, number, series, short, stamp, Stats } from '../usage';
 
 export default class UsageStatsModal extends Modal {
   stats: Stats | null = null;
@@ -33,7 +16,7 @@ export default class UsageStatsModal extends Modal {
   }
 
   className() {
-    return 'ChatGptUsageModal Modal--small';
+    return 'ChatGptUsageModal Modal--medium';
   }
 
   title() {
@@ -49,22 +32,34 @@ export default class UsageStatsModal extends Modal {
     const tokens = (api.prompt_tokens || 0) + (api.completion_tokens || 0);
 
     return (
-      <div className="Modal-body">
-        <table className="ChatGptUsageModal-table">
-          {this.rows('wszdb-flarumaichat.admin.usage.api_heading', [
+      <div className="Modal-body ChatGptUsage">
+        <div className="ChatGptUsage-cards">
+          {this.card('requests', short(api.requests))}
+          {this.card('total_tokens', short(tokens))}
+          {this.card('answers', short(posts ? posts.answers : 0))}
+          {this.card('failures', short(api.failures), api.failures > 0)}
+        </div>
+
+        {chart(
+          series(this.stats.answers_daily, (value) => Number(value)),
+          app.translator.trans('wszdb-flarumaichat.admin.usage.chart_answers')
+        )}
+        {chart(
+          series(this.stats.daily, (day) => (day.prompt_tokens || 0) + (day.completion_tokens || 0)),
+          app.translator.trans('wszdb-flarumaichat.admin.usage.chart_tokens')
+        )}
+
+        <div className="ChatGptUsage-columns">
+          {this.rows('api_heading', [
             ['model', this.stats.model || '—'],
-            ['requests', number(api.requests)],
-            ['failures', number(api.failures)],
             ['prompt_tokens', number(api.prompt_tokens)],
             ['completion_tokens', number(api.completion_tokens)],
-            ['total_tokens', number(tokens)],
             ['avg_tokens', api.requests ? number(Math.round(tokens / api.requests)) : '—'],
             ['since', stamp(api.since)],
             ['last', stamp(api.last)],
           ])}
           {posts &&
-            this.rows('wszdb-flarumaichat.admin.usage.posts_heading', [
-              ['answers', number(posts.answers)],
+            this.rows('posts_heading', [
               ['answers_7d', number(posts.answers_7d)],
               ['answers_30d', number(posts.answers_30d)],
               ['discussions', number(posts.discussions)],
@@ -72,9 +67,10 @@ export default class UsageStatsModal extends Modal {
               ['first_answer', stamp(posts.first_at)],
               ['last_answer', stamp(posts.last_at)],
             ])}
-        </table>
+        </div>
+
         <p className="helpText">{app.translator.trans('wszdb-flarumaichat.admin.usage.help')}</p>
-        <Button className="Button Button--danger" onclick={() => this.reset()}>
+        <Button className="Button Button--danger Button--text" onclick={() => this.reset()}>
           {app.translator.trans(
             this.confirmingReset ? 'wszdb-flarumaichat.admin.usage.reset_confirm' : 'wszdb-flarumaichat.admin.usage.reset'
           )}
@@ -83,18 +79,27 @@ export default class UsageStatsModal extends Modal {
     );
   }
 
+  card(key: string, value: string, warn = false) {
+    return (
+      <div className={'ChatGptUsage-card' + (warn ? ' ChatGptUsage-card--warn' : '')}>
+        <div className="ChatGptUsage-cardValue">{value}</div>
+        <div className="ChatGptUsage-cardLabel">{app.translator.trans('wszdb-flarumaichat.admin.usage.' + key)}</div>
+      </div>
+    );
+  }
+
   rows(headingKey: string, rows: [string, string][]) {
-    return [
-      <tr>
-        <th colspan="2">{app.translator.trans(headingKey)}</th>
-      </tr>,
-      ...rows.map(([key, value]) => (
-        <tr>
-          <td>{app.translator.trans('wszdb-flarumaichat.admin.usage.' + key)}</td>
-          <td>{value}</td>
-        </tr>
-      )),
-    ];
+    return (
+      <div className="ChatGptUsage-column">
+        <h4>{app.translator.trans('wszdb-flarumaichat.admin.usage.' + headingKey)}</h4>
+        {rows.map(([key, value]) => (
+          <div className="ChatGptUsage-row">
+            <span>{app.translator.trans('wszdb-flarumaichat.admin.usage.' + key)}</span>
+            <span>{value}</span>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   reset() {
@@ -110,11 +115,7 @@ export default class UsageStatsModal extends Modal {
   load(reset = false) {
     this.loading = true;
 
-    app
-      .request<Stats>({
-        method: reset ? 'DELETE' : 'GET',
-        url: app.forum.attribute('apiUrl') + '/chatgpt/stats',
-      })
+    loadStats(reset)
       .then((stats) => {
         this.stats = stats;
         this.loading = false;

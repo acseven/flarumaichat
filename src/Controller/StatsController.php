@@ -32,9 +32,23 @@ class StatsController implements RequestHandlerInterface
 
         return new JsonResponse([
             'api' => Usage::totals($this->settings),
+            'daily' => Usage::daily($this->settings),
             'posts' => $botId ? $this->postStats($botId) : null,
+            'answers_daily' => $botId ? $this->answersPerDay($botId) : [],
             'model' => (string) $this->settings->get('wszdb-flarumaichat.model'),
         ]);
+    }
+
+    private function answersPerDay(int $botId): array
+    {
+        return Post::query()
+            ->where('type', 'comment')
+            ->where('user_id', $botId)
+            ->where('created_at', '>=', Carbon::now()->subDays(29)->startOfDay())
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as answers')
+            ->groupBy('day')
+            ->pluck('answers', 'day')
+            ->all();
     }
 
     private function postStats(int $botId): array

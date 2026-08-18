@@ -40,6 +40,42 @@ class Usage
         }
 
         $settings->set('wszdb-flarumaichat.usage_last', time());
+
+        self::recordDay($settings, $promptTokens, $completionTokens, $failed);
+    }
+
+    /**
+     * Daily buckets, so the admin page can draw a chart.
+     */
+    public static function daily(SettingsRepositoryInterface $settings): array
+    {
+        $days = json_decode((string) $settings->get('wszdb-flarumaichat.usage_daily'), true);
+
+        return is_array($days) ? $days : [];
+    }
+
+    // ponytail: the last 30 days only, as one JSON settings row. A longer
+    // history, or per-model figures, wants a table of its own.
+    private static function recordDay(
+        SettingsRepositoryInterface $settings,
+        int $promptTokens,
+        int $completionTokens,
+        bool $failed
+    ): void {
+        $days = self::daily($settings);
+        $today = gmdate('Y-m-d');
+        $day = $days[$today] ?? ['requests' => 0, 'failures' => 0, 'prompt_tokens' => 0, 'completion_tokens' => 0];
+
+        $day['requests']++;
+        $day['failures'] += $failed ? 1 : 0;
+        $day['prompt_tokens'] += $promptTokens;
+        $day['completion_tokens'] += $completionTokens;
+        $days[$today] = $day;
+
+        ksort($days);
+        $days = array_slice($days, -30, null, true);
+
+        $settings->set('wszdb-flarumaichat.usage_daily', json_encode($days));
     }
 
     public static function totals(SettingsRepositoryInterface $settings): array
@@ -61,6 +97,8 @@ class Usage
         foreach (array_merge(self::KEYS, ['since', 'last']) as $key) {
             $settings->set('wszdb-flarumaichat.usage_' . $key, 0);
         }
+
+        $settings->set('wszdb-flarumaichat.usage_daily', '[]');
     }
 
     private static function read(SettingsRepositoryInterface $settings, string $key): int

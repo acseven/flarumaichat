@@ -1,7 +1,14 @@
 import app from 'flarum/admin/app';
+import { extend } from 'flarum/common/extend';
+import DashboardPage from 'flarum/admin/components/DashboardPage';
 import ChatGptSettings from './components/ChatGptSettings';
+import UsageWidget from './components/UsageWidget';
 
 app.initializers.add('wszdb-flarumaichat', () => {
+  extend(DashboardPage.prototype, 'availableWidgets', (widgets: any) => {
+    widgets.add('chatgpt-usage', <UsageWidget />, 19);
+  });
+
   app.extensionData
     .for('wszdb-flarumaichat')
     .registerPermission(
