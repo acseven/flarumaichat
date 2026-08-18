@@ -265,6 +265,11 @@ class Agent
                 'message_count' => count($messages)
             ]);
 
+            // ponytail: temporary payload dump for the z.ai 400 hunt; remove once fixed
+            $log->info('[ChatGPT] Request payload', [
+                'json' => mb_substr(json_encode($params, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 0, 6000)
+            ]);
+
             $response = $this->client->chat()->create($params);
 
             $log->info('[ChatGPT] API Response Received', [
