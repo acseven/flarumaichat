@@ -220,6 +220,12 @@ export default class ChatGptSettings extends ExtensionPage {
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.answer_duration_label'),
             })}
             {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.answer_delay',
+              type: 'number',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.answer_delay_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.answer_delay_help'),
+            })}
+            {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.enable_on_reply',
               type: 'boolean',
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.enable_on_reply_label'),

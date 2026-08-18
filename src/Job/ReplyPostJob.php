@@ -14,6 +14,7 @@ class ReplyPostJob extends AbstractJob
 {
     use Queueable;
     use SerializesModels;
+    use DelaysReply;
 
     public function __construct(protected CommentPost $post)
     {
@@ -31,20 +32,11 @@ class ReplyPostJob extends AbstractJob
                 'created_at' => $this->post->created_at->toDateTimeString()
             ]);
 
-            $settings = resolve(SettingsRepositoryInterface::class);
-            $duration = $settings->get('wszdb-flarumaichat.answer_duration');
-
-            // check if the discussion is greater or equal to the duration
-            if ($this->post->created_at->diffInMinutes() < $duration) {
-                $log->info('[ChatGPT Job] Post too recent, releasing job', [
-                    'post_id' => $this->post->id,
-                    'age_minutes' => $this->post->created_at->diffInMinutes(),
-                    'required_duration' => $duration
-                ]);
-                // if the discussion is less than the duration, dont do anything but do not delete from the queue
-                $this->release(60);
+            if ($this->holdBack($this->post->created_at, ['post_id' => $this->post->id])) {
                 return;
             }
+
+            $settings = resolve(SettingsRepositoryInterface::class);
 
             $continueToReply = $settings->get('wszdb-flarumaichat.continue_to_reply');
             if (!$continueToReply) {
