@@ -96,7 +96,7 @@ class Agent
         }
     }
 
-    public function repliesToCommentPost(CommentPost $commentPost): void
+    public function repliesToCommentPost(CommentPost $commentPost, bool $force = false): void
     {
         $log = resolve('log');
 
@@ -114,7 +114,7 @@ class Agent
                 'is_reasoning_model' => $this->isReasoningModel()
             ]);
 
-            if (!$this->checkIfAssistantCanReplyToPost($commentPost)) {
+            if (!$force && !$this->checkIfAssistantCanReplyToPost($commentPost)) {
                 $log->info('[ChatGPT] Assistant cannot reply to this post', [
                     'post_id' => $commentPost->id,
                     'reason' => 'checkIfAssistantCanReplyToPost returned false'

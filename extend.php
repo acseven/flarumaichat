@@ -16,7 +16,9 @@ use Flarum\Discussion\Event\Started;
 use Flarum\Extend;
 use Flarum\Http\Middleware\HandleErrors;
 use Flarum\Post\Event\Posted;
+use Flarum\Api\Serializer\ForumSerializer;
 use Wszdb\FlarumAiChat\Controller\FetchModelsController;
+use Wszdb\FlarumAiChat\Controller\TriggerReplyController;
 use Wszdb\FlarumAiChat\Listener\ReplyToCommentPost;
 use Wszdb\FlarumAiChat\Listener\ReplyToPost;
 use Wszdb\FlarumAiChat\Middleware\ModerationMiddleware;
@@ -42,7 +44,11 @@ return [
     (new Extend\Locales(__DIR__ . '/locale')),
 
     (new Extend\Routes('api'))
-        ->post('/chatgpt/fetch-models', 'chatgpt.fetch-models', FetchModelsController::class),
+        ->post('/chatgpt/fetch-models', 'chatgpt.fetch-models', FetchModelsController::class)
+        ->post('/chatgpt/reply/{id}', 'chatgpt.reply', TriggerReplyController::class),
+
+    (new Extend\ApiSerializer(ForumSerializer::class))
+        ->attribute('canTriggerChatGptAssistant', fn ($serializer) => $serializer->getActor()->hasPermission('discussion.triggerChatGPTAssistant')),
 
     (new Extend\ServiceProvider())
         ->register(BindingsProvider::class)

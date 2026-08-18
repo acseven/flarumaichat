@@ -13,5 +13,14 @@ app.initializers.add('wszdb-flarumaichat', () => {
       },
       'start'
     )
+    .registerPermission(
+      {
+        label: app.translator.trans('wszdb-flarumaichat.admin.permissions.trigger_chatgpt_assistant_label'),
+        icon: 'fas fa-robot',
+        permission: 'discussion.triggerChatGPTAssistant',
+        allowGuest: false,
+      },
+      'moderate'
+    )
     .registerPage(ChatGptSettings);
 });

@@ -48,5 +48,10 @@ wszdb-flarumaichat:
 
     permissions:
       use_chatgpt_assistant_label: Use ChatGPT Assistant
+      trigger_chatgpt_assistant_label: Ask the assistant to answer a post
 
   forum:
+    post_controls:
+      trigger_assistant: Ask the assistant
+      trigger_started: Asking the assistant, this takes a few seconds...
+
