@@ -40,8 +40,14 @@ class Agent
                 'is_reasoning_model' => $this->isReasoningModel()
             ]);
 
-            $content = $discussion->firstPost->content;
+            $firstPost = $discussion->firstPost ?: $discussion->posts()->where('type', 'comment')->orderBy('number')->first();
+            $content = $firstPost->content ?? '';
             $title = $discussion->title;
+
+            if (trim($content) === '') {
+                $log->warning('[ChatGPT] First post content empty, skipping', ['discussion_id' => $discussion->id]);
+                return;
+            }
 
             ['role' => $role, 'prompt' => $prompt] = $this->prepareChatForMessage();
 
@@ -86,7 +92,7 @@ class Agent
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            throw $e;
+            return;
         }
     }
 
@@ -183,7 +189,7 @@ class Agent
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            throw $e;
+            return;
         }
     }
 
@@ -237,6 +243,12 @@ class Agent
                 'model' => $this->model,
                 'messages' => $messages,
             ];
+
+            // z.ai GLM: thinking tokens consume max_tokens and add ~70s latency
+            if (str_starts_with(strtolower($this->model), 'glm')) {
+                $thinking = resolve(SettingsRepositoryInterface::class)->get('wszdb-flarumaichat.glm_thinking');
+                $params['thinking'] = ['type' => $thinking ? 'enabled' : 'disabled'];
+            }
 
             // Use max_completion_tokens for reasoning models (o1, o3, o4, gpt-5 series)
             // Use max_tokens for legacy models (gpt-3.5, gpt-4, etc.)

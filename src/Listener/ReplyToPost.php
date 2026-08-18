@@ -28,9 +28,13 @@ class ReplyToPost
         $enabled = $settings->get('wszdb-flarumaichat.queue_active');
         $enabledTagIds = $settings->get('wszdb-flarumaichat.enabled-tags', []);
         $actor = $event->actor;
+        $discussion = $event->discussion;
+
+        if ($discussion->is_private && !$settings->get('wszdb-flarumaichat.reply_in_private')) {
+            return;
+        }
 
         if ($enabledTagIds = json_decode($enabledTagIds, true)) {
-            $discussion = $event->discussion;
             $tagIds = Arr::pluck($discussion->tags, 'id');
 
             if (!array_intersect($enabledTagIds, $tagIds)) {

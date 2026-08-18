@@ -61,6 +61,10 @@ return [
         ->default('wszdb-flarumaichat.max_tokens', 100)
         ->default('wszdb-flarumaichat.user_prompt_badge_text', 'Assistant')
         ->default('wszdb-flarumaichat.queue_active', true)
+        // do not answer inside private discussions (fof/byobu) unless enabled
+        ->default('wszdb-flarumaichat.reply_in_private', false)
+        // GLM reasoning: slower and thinking tokens eat max_tokens
+        ->default('wszdb-flarumaichat.glm_thinking', false)
         // new setting for answer duration in minutes (default 5)
         ->default('wszdb-flarumaichat.answer_duration', 0)
         // If any user replied to post, the AI will not reply to that post setting

@@ -31,6 +31,10 @@ wszdb-flarumaichat:
       continue_to_reply_help: Continue to reply if there is an answer
       continue_to_reply_count_label: Continue to reply count
       continue_to_reply_count_help: How many times the bot will continue to reply. Default is 5.
+      glm_thinking_label: GLM thinking
+      glm_thinking_help: Only for GLM models. Lets the model reason before answering. Slower (~70s vs ~15s) and the thinking tokens count against Max Tokens, so raise Max Tokens if you turn this on. Default is off.
+      reply_in_private_label: Reply in private discussions
+      reply_in_private_help: When off, the bot ignores private discussions and private messages. Default is off.
       queue_active_label: Queue Active
       queue_active_help: When the queue is activated, the bot is added to the queue to respond.
       moderation_label: Moderation

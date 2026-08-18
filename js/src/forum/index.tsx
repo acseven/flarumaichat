@@ -4,9 +4,11 @@ import PostUser from 'flarum/forum/components/PostUser';
 
 app.initializers.add('wszdb-flarumaichat', () => {
   extend(PostUser.prototype, 'view', function (this: any, view: any) {
-    const user = this.attrs?.post?.user();
+    const post = this.attrs?.post;
+    const user = post?.user();
 
-    if (!user || app.forum.attribute('chatGptUserPromptId') !== user.id()) return;
+    // hidden (soft-deleted) posts collapse, the absolutely-positioned badge would float over the next post
+    if (!user || post.isHidden() || app.forum.attribute('chatGptUserPromptId') !== user.id()) return;
 
     if (view.children && Array.isArray(view.children)) {
       view.children.push(

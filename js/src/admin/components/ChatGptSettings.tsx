@@ -195,6 +195,18 @@ export default class ChatGptSettings extends ExtensionPage {
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.user_prompt_badge_label'),
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.user_prompt_badge_help'),
             })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.glm_thinking',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.glm_thinking_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.glm_thinking_help'),
+            })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.reply_in_private',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.reply_in_private_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.reply_in_private_help'),
+            })}
             {/*new setting for queue_active */}
             {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.queue_active',
