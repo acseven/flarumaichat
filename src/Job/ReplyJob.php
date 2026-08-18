@@ -8,6 +8,7 @@ use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Wszdb\FlarumAiChat\Agent;
+use Wszdb\FlarumAiChat\Silence;
 
 class ReplyJob extends AbstractJob
 {
@@ -40,13 +41,25 @@ class ReplyJob extends AbstractJob
                 return;
             }
 
+            // the answer waited, so the discussion may have been made private
+            // or given a blocked tag since the listener queued this job
+            $discussion = $this->discussion->fresh();
+
+            if (!$discussion || ($reason = Silence::reason($discussion))) {
+                $log->info('[ChatGPT Job] Skipping - the assistant must stay out of this discussion', [
+                    'discussion_id' => $this->discussion->id,
+                    'reason' => $discussion ? $reason : 'gone'
+                ]);
+                return;
+            }
+
             $settings = resolve(SettingsRepositoryInterface::class);
 
             // check reply_to_post setting in settings
             $replyToPost = $settings->get('wszdb-flarumaichat.reply_to_post');
 
             // check if any user replied to the post and replyToPost setting is true
-            $postCount = $this->discussion->posts()->where('type', 'comment')->count();
+            $postCount = $discussion->posts()->where('type', 'comment')->count();
             if ($replyToPost && $postCount > 1) {
                 $log->info('[ChatGPT Job] Skipping - users already replied', [
                     'discussion_id' => $this->discussion->id,
@@ -60,7 +73,7 @@ class ReplyJob extends AbstractJob
                 'discussion_id' => $this->discussion->id
             ]);
 
-            $agent->repliesTo($this->discussion);
+            $agent->repliesTo($discussion);
 
             $log->info('[ChatGPT Job] ReplyJob completed successfully', [
                 'discussion_id' => $this->discussion->id

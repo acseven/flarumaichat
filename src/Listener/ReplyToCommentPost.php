@@ -7,7 +7,7 @@ use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Support\Arr;
 use Wszdb\FlarumAiChat\Agent;
-use Wszdb\FlarumAiChat\BlockedTags;
+use Wszdb\FlarumAiChat\Silence;
 use Wszdb\FlarumAiChat\Job\ReplyPostJob;
 
 class ReplyToCommentPost
@@ -28,7 +28,7 @@ class ReplyToCommentPost
         $settings = resolve(SettingsRepositoryInterface::class);
         $enabledTagIds = $settings->get('wszdb-flarumaichat.enabled-tags', []);
         $enabled = $settings->get('wszdb-flarumaichat.queue_active');
-        $actor = $event->actor ?? $event->post->user;
+        $actor = $event->actor;
         $discussion = $event->post->discussion;
 
         // the assistant's own answer is a post like any other: never answer it
@@ -36,11 +36,7 @@ class ReplyToCommentPost
             return;
         }
 
-        if ($discussion->is_private && !$settings->get('wszdb-flarumaichat.reply_in_private')) {
-            return;
-        }
-
-        if (BlockedTags::block($discussion)) {
+        if (Silence::reason($discussion)) {
             return;
         }
 

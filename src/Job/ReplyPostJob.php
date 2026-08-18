@@ -9,6 +9,7 @@ use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Wszdb\FlarumAiChat\Agent;
+use Wszdb\FlarumAiChat\Silence;
 
 class ReplyPostJob extends AbstractJob
 {
@@ -42,6 +43,18 @@ class ReplyPostJob extends AbstractJob
                 return;
             }
 
+            // the answer waited, so the discussion may have been made private
+            // or given a blocked tag since the listener queued this job
+            $post = $this->post->fresh();
+
+            if (!$post || !$post->discussion || ($reason = Silence::reason($post->discussion))) {
+                $log->info('[ChatGPT Job] Skipping - the assistant must stay out of this discussion', [
+                    'post_id' => $this->post->id,
+                    'reason' => $post && $post->discussion ? $reason : 'gone'
+                ]);
+                return;
+            }
+
             $settings = resolve(SettingsRepositoryInterface::class);
 
             $continueToReply = $settings->get('wszdb-flarumaichat.continue_to_reply');
@@ -57,7 +70,7 @@ class ReplyPostJob extends AbstractJob
                 'post_id' => $this->post->id
             ]);
 
-            $agent->repliesToCommentPost($this->post);
+            $agent->repliesToCommentPost($post);
 
             $log->info('[ChatGPT Job] ReplyPostJob completed successfully', [
                 'post_id' => $this->post->id

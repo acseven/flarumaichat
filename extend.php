@@ -17,6 +17,7 @@ use Flarum\Extend;
 use Flarum\Http\Middleware\HandleErrors;
 use Flarum\Post\Event\Posted;
 use Flarum\Api\Serializer\ForumSerializer;
+use Flarum\Api\Serializer\PostSerializer;
 use Wszdb\FlarumAiChat\Controller\FetchModelsController;
 use Wszdb\FlarumAiChat\Controller\StatsController;
 use Wszdb\FlarumAiChat\Controller\TriggerReplyController;
@@ -51,8 +52,11 @@ return [
         ->delete('/chatgpt/stats', 'chatgpt.stats.reset', StatsController::class),
 
     (new Extend\ApiSerializer(ForumSerializer::class))
-        ->attribute('canTriggerChatGptAssistant', fn ($serializer) => $serializer->getActor()->hasPermission('discussion.triggerChatGPTAssistant'))
         ->attribute('chatGptBlockedTags', fn () => BlockedTags::ids()),
+
+    (new Extend\ApiSerializer(PostSerializer::class))
+        ->attribute('canTriggerChatGptAssistant', fn ($serializer, $post) => $post->discussion
+            && $serializer->getActor()->can('discussion.triggerChatGPTAssistant', $post->discussion)),
 
     (new Extend\ServiceProvider())
         ->register(BindingsProvider::class)

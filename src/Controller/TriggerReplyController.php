@@ -4,7 +4,6 @@ namespace Wszdb\FlarumAiChat\Controller;
 
 use Flarum\Http\RequestUtil;
 use Flarum\Post\PostRepository;
-use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Exception\PermissionDeniedException;
 use Illuminate\Support\Arr;
 use Laminas\Diactoros\Response\JsonResponse;
@@ -13,7 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Wszdb\FlarumAiChat\Agent;
-use Wszdb\FlarumAiChat\BlockedTags;
+use Wszdb\FlarumAiChat\Silence;
 
 /**
  * Makes the assistant answer one post on demand, for staff who hold the
@@ -24,7 +23,6 @@ class TriggerReplyController implements RequestHandlerInterface
     public function __construct(
         protected PostRepository $posts,
         protected Agent $agent,
-        protected SettingsRepositoryInterface $settings,
         protected TranslatorInterface $translator
     ) {
     }
@@ -43,19 +41,15 @@ class TriggerReplyController implements RequestHandlerInterface
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $actor = RequestUtil::getActor($request);
+        $post = $this->posts->findOrFail(Arr::get($request->getQueryParams(), 'id'), $actor);
 
-        if (!$actor->hasPermission('discussion.triggerChatGPTAssistant')) {
+        // scoped to the discussion, the way the automatic reply checks its own permission
+        if ($actor->cannot('discussion.triggerChatGPTAssistant', $post->discussion)) {
             throw new PermissionDeniedException();
         }
 
-        $post = $this->posts->findOrFail(Arr::get($request->getQueryParams(), 'id'), $actor);
-
-        if (BlockedTags::block($post->discussion)) {
-            return $this->refuse('error_blocked_tags', 403);
-        }
-
-        if ($post->discussion->is_private && !$this->settings->get('wszdb-flarumaichat.reply_in_private')) {
-            return $this->refuse('error_private', 403);
+        if ($reason = Silence::reason($post->discussion)) {
+            return $this->refuse('error_'.$reason, 403);
         }
 
         if ($post->type !== 'comment') {

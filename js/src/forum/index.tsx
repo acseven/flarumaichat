@@ -57,7 +57,7 @@ app.initializers.add('wszdb-flarumaichat', () => {
   });
 
   extend(PostControls, 'moderationControls', function (items: any, post: any) {
-    if (!app.forum.attribute('canTriggerChatGptAssistant')) return;
+    if (!post.attribute('canTriggerChatGptAssistant')) return;
     if (post.contentType() !== 'comment' || post.isHidden()) return;
     if (isBlocked(post.discussion())) return;
 

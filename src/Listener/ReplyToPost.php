@@ -7,7 +7,7 @@ use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Support\Arr;
 use Wszdb\FlarumAiChat\Agent;
-use Wszdb\FlarumAiChat\BlockedTags;
+use Wszdb\FlarumAiChat\Silence;
 use Wszdb\FlarumAiChat\Job\ReplyJob;
 
 class ReplyToPost
@@ -31,11 +31,7 @@ class ReplyToPost
         $actor = $event->actor;
         $discussion = $event->discussion;
 
-        if ($discussion->is_private && !$settings->get('wszdb-flarumaichat.reply_in_private')) {
-            return;
-        }
-
-        if (BlockedTags::block($discussion)) {
+        if (Silence::reason($discussion)) {
             return;
         }
 
