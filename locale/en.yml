@@ -80,7 +80,7 @@ wszdb-flarumaichat:
       moderation_label: Moderation
       moderation_help: If moderation is enabled, the user cannot create a discussion or reply if it is contains inappropriate content.
       fetch_models_label: Refresh OpenAI Models
-      fetch_models_button: Fetch Latest Models from OpenAI
+      fetch_models_button: Fetch Models from OpenAI API
       models_fetched_success: "Successfully fetched {count} models from OpenAI"
       fetch_models_error: Failed to fetch models. Please check your API key and base URI settings.
       models_fetched_unsaved: These models come from the API key and base URI you typed. Save the settings to keep them.
