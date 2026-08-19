@@ -57,6 +57,10 @@ assert($facts($base . '/secret.json', 'Outside') === '', 'absolute paths must be
 @symlink($base . '/secret.json', $base . '/data/linked.json');
 assert(str_contains($facts('linked.json', 'Outside'), '"id":"nope"'), 'a symlink inside the base is followed');
 
+// the budget bounds what one prompt carries
+$tight = (new ContextFiles($base . '/data', 'notes.txt', 20))->factsFor('anything');
+assert($tight !== '' && strlen($tight) < 200, 'a small budget cuts the block down');
+
 // a non-JSON file is passed through as text
 assert(str_contains($facts('notes.txt', 'anything'), 'plain text notes'), 'plain files pass through');
 

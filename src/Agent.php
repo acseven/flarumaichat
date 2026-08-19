@@ -422,13 +422,16 @@ class Agent
      */
     private function contextFacts(string $text): string
     {
-        $paths = (string) resolve(SettingsRepositoryInterface::class)->get('wszdb-flarumaichat.context_files');
+        $settings = resolve(SettingsRepositoryInterface::class);
+        $paths = (string) $settings->get('wszdb-flarumaichat.context_files');
 
         if (trim($paths) === '') {
             return '';
         }
 
-        $facts = (new ContextFiles(resolve(Paths::class)->base, $paths))->factsFor($text);
+        $budget = (int) $settings->get('wszdb-flarumaichat.context_chars') ?: ContextFiles::MAX_TOTAL_CHARS;
+
+        $facts = (new ContextFiles(resolve(Paths::class)->base, $paths, $budget))->factsFor($text);
 
         resolve('log')->info('[ChatGPT] Local context', ['chars' => strlen($facts)]);
 

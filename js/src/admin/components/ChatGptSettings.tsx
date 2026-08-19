@@ -330,6 +330,13 @@ export default class ChatGptSettings extends ExtensionPage {
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.context_files_label'),
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.context_files_help'),
             })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.context_chars',
+              type: 'number',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.context_chars_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.context_chars_help'),
+              default: 6000,
+            })}
             <h3 className="ChatGptSettings-heading">
               <i className="fas fa-robot" /> {app.translator.trans('wszdb-flarumaichat.admin.settings.zai_heading')}
             </h3>

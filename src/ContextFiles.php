@@ -18,12 +18,13 @@ class ContextFiles
 
     private const MAX_RECORDS = 5;
     private const MAX_RECORD_CHARS = 1500;
-    private const MAX_TOTAL_CHARS = 6000;
+    public const MAX_TOTAL_CHARS = 6000;
     private const MAX_FILE_BYTES = 8388608; // 8 MB
 
     public function __construct(
         private string $baseDir,
-        private string $paths
+        private string $paths,
+        private int $maxTotalChars = self::MAX_TOTAL_CHARS
     ) {
     }
 
@@ -33,7 +34,7 @@ class ContextFiles
     public function factsFor(string $text): string
     {
         $blocks = [];
-        $budget = self::MAX_TOTAL_CHARS;
+        $budget = $this->maxTotalChars;
 
         foreach ($this->files() as $path) {
             if ($budget <= 0) {

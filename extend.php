@@ -84,6 +84,8 @@ return [
         ->default('wszdb-flarumaichat.web_search_domains', '')
         // local data files the answer may quote from
         ->default('wszdb-flarumaichat.context_files', '')
+        // characters of local data the prompt may carry
+        ->default('wszdb-flarumaichat.context_chars', 6000)
         // new setting for answer duration in minutes (default 5)
         ->default('wszdb-flarumaichat.answer_duration', 0)
         // extra wait in seconds, added on top of the answer duration

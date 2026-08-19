@@ -35,8 +35,8 @@ wszdb-flarumaichat:
       base_uri_help: The base URI of the OpenAI API. Default is <code>https://api.openai.com/v1</code>.
       model_label: Model
       model_help: "Learn more about <a>models</a> (default: <code>text-davinci-003</code>)."
-      max_tokens_label: Max Tokens
-      max_tokens_help: <a>What are tokens and how to count them?</a>
+      max_tokens_label: Max answer tokens
+      max_tokens_help: The longest answer the model may write, in tokens (100 is about 75 words). This is the reply only — it does not set the model's context window. On a thinking model the reasoning comes out of the same budget, so a low value can leave nothing to post. <a>What are tokens and how to count them?</a>
       user_prompt_label: User ID of Bot
       user_prompt_help: Enter the id of the forum user that posts the answers.
       user_prompt_badge_label: User Prompt Badge
@@ -67,6 +67,8 @@ wszdb-flarumaichat:
       context_heading: Site data
       context_files_label: Data files
       context_files_help: "One path per line, relative to the Flarum installation, for example vendor/acseven/chdk-cameras/resources/cameras.json. A JSON file holding a list of records is searched record by record: a record named in the post is handed to the model as fact. Any other file is passed as plain text, and a plain file goes to the model whole with every single answer, whatever the post is about, so only list files whose full content may leave the site. Leave empty to feed nothing."
+      context_chars_label: Context characters
+      context_chars_help: How much of those files one prompt may carry, in characters (6000 is roughly 1500 tokens). Raise it only as far as the model's context window allows.
       web_search_label: Web search
       web_search_help: Let the model search the web while it answers. GLM models only, charged per search by z.ai, and it adds seconds to the answer.
       web_search_domains_label: Search only these domains
