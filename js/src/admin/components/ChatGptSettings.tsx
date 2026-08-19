@@ -126,19 +126,21 @@ export default class ChatGptSettings extends ExtensionPage {
       <div className="Form-group">
         <label>{app.translator.trans('wszdb-flarumaichat.admin.settings.blocked_groups_label')}</label>
         <div className="helpText">{app.translator.trans('wszdb-flarumaichat.admin.settings.blocked_groups_help')}</div>
-        {app.store
-          .all<Group>('groups')
-          .filter((group) => group.id() !== Group.GUEST_ID)
-          .map((group) => (
-            <Checkbox
-              state={selected.includes(group.id()!)}
-              onchange={(checked: boolean) =>
-                setting(JSON.stringify(checked ? [...selected, group.id()!] : selected.filter((id) => id !== group.id()!)))
-              }
-            >
-              {group.namePlural()}
-            </Checkbox>
-          ))}
+        <div className="ChatGptSettings-groups">
+          {app.store
+            .all<Group>('groups')
+            .filter((group) => group.id() !== Group.GUEST_ID)
+            .map((group) => (
+              <Checkbox
+                state={selected.includes(group.id()!)}
+                onchange={(checked: boolean) =>
+                  setting(JSON.stringify(checked ? [...selected, group.id()!] : selected.filter((id) => id !== group.id()!)))
+                }
+              >
+                {group.namePlural()}
+              </Checkbox>
+            ))}
+        </div>
       </div>
     );
   }
