@@ -14,21 +14,38 @@ class BlockedGroups
 {
     public static function ids(): array
     {
-        $setting = resolve(SettingsRepositoryInterface::class)->get('wszdb-flarumaichat.blocked-groups');
-
-        return array_map('intval', json_decode($setting ?: '[]', true) ?: []);
+        return static::read('wszdb-flarumaichat.blocked-groups');
     }
 
     public static function block(?User $user): bool
     {
-        $blocked = static::ids();
+        return static::member($user, static::ids());
+    }
 
-        if (!$blocked || !$user) {
+    /**
+     * Groups the block leaves open to a hand-made request: staff may still use
+     * the post control to have the assistant answer one of their posts.
+     */
+    public static function manualOverride(?User $user): bool
+    {
+        return static::member($user, static::read('wszdb-flarumaichat.manual-override-groups'));
+    }
+
+    private static function read(string $key): array
+    {
+        $setting = resolve(SettingsRepositoryInterface::class)->get($key);
+
+        return array_map('intval', json_decode($setting ?: '[]', true) ?: []);
+    }
+
+    private static function member(?User $user, array $ids): bool
+    {
+        if (!$ids || !$user) {
             return false;
         }
 
         foreach ($user->groups as $group) {
-            if (in_array((int) $group->id, $blocked, true)) {
+            if (in_array((int) $group->id, $ids, true)) {
                 return true;
             }
         }

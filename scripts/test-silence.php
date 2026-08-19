@@ -130,4 +130,11 @@ assert(Silence::reason($open, $other) === null, 'other groups are left alone');
 // a blocked group does not open a private discussion, and privacy is reported first
 assert(Silence::reason($private, $member) === 'private', 'privacy is reported before the groups');
 
+// the override only opens the door the manual trigger uses; the block itself stands
+$settings->set('wszdb-flarumaichat.manual-override-groups', json_encode([8]));
+
+assert(\Wszdb\FlarumAiChat\BlockedGroups::manualOverride($member) === true, 'the override names the group');
+assert(\Wszdb\FlarumAiChat\BlockedGroups::manualOverride($other) === false, 'other groups have no override');
+assert(Silence::reason($open, $member) === 'blocked_groups', 'the override leaves the automatic answer blocked');
+
 echo "ok\n";

@@ -10,13 +10,31 @@
   }
 }
 
-// core makes .Form-group label a bold block, and a Checkbox root IS a label,
-// so without this every group takes its own row
 .ChatGptSettings-groups {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 20px;
-  margin-top: 8px;
+  width: 100%;
+  margin-top: 10px;
+
+  th,
+  td {
+    padding: 5px 10px 5px 0;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  thead th {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: @muted-color;
+    font-weight: 600;
+  }
+
+  tbody tr + tr {
+    border-top: 1px solid @control-bg;
+  }
+
+  tbody th {
+    font-weight: 600;
+  }
 
   .Checkbox {
     display: inline-block;

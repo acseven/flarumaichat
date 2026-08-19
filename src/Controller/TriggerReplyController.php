@@ -12,6 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Wszdb\FlarumAiChat\Agent;
+use Wszdb\FlarumAiChat\BlockedGroups;
 use Wszdb\FlarumAiChat\Silence;
 
 /**
@@ -48,7 +49,15 @@ class TriggerReplyController implements RequestHandlerInterface
             throw new PermissionDeniedException();
         }
 
-        if ($reason = Silence::reason($post->discussion, $post->user)) {
+        $reason = Silence::reason($post->discussion, $post->user);
+
+        // asking by hand is the point of the override: the block only holds
+        // against the assistant answering on its own
+        if ($reason === 'blocked_groups' && BlockedGroups::manualOverride($post->user)) {
+            $reason = null;
+        }
+
+        if ($reason) {
             return $this->refuse('error_'.$reason, 403);
         }
 

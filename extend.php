@@ -101,6 +101,7 @@ return [
         ->default('wszdb-flarumaichat.base_uri', 'https://api.openai.com/v1/')
         ->default('wszdb-flarumaichat.blocked-tags', '[]')
         ->default('wszdb-flarumaichat.blocked-groups', '[]')
+        ->default('wszdb-flarumaichat.manual-override-groups', '[]')
         ->default('wszdb-flarumaichat.cached_models', '[]')
         ->default('wszdb-flarumaichat.models_last_fetched', 0)
         ->serializeToForum('chatGptUserPromptId', 'wszdb-flarumaichat.user_prompt')

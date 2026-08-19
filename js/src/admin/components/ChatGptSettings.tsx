@@ -125,35 +125,91 @@ export default class ChatGptSettings extends ExtensionPage {
     });
   }
 
-  blockedGroups() {
-    const setting = this.setting('wszdb-flarumaichat.blocked-groups', '[]');
-    let selected: string[] = [];
+  /** A JSON-array-of-group-ids setting, read and written one id at a time. */
+  groupSetting(key: string) {
+    const stream = this.setting(key, '[]');
+    let ids: string[] = [];
 
     try {
-      selected = (JSON.parse(setting() || '[]') as any[]).map(String);
+      ids = (JSON.parse(stream() || '[]') as any[]).map(String);
     } catch (e) {
       // a hand-edited setting row: start from nothing rather than break the page
     }
 
+    return {
+      has: (id: string) => ids.includes(id),
+      toggle: (id: string, on: boolean) => stream(JSON.stringify(on ? [...ids, id] : ids.filter((each) => each !== id))),
+    };
+  }
+
+  /** The core permission behind the "Ask the assistant" post control. */
+  triggerPermission() {
+    const permission = 'discussion.triggerChatGPTAssistant';
+    const groupIds: string[] = app.data.permissions[permission] || [];
+
+    return {
+      has: (id: string) => groupIds.includes(id),
+      toggle: (id: string, on: boolean) => {
+        const next = on ? [...groupIds, id] : groupIds.filter((each) => each !== id);
+
+        // core saves a permission the moment it is toggled, the Save button never sees it
+        app.data.permissions[permission] = next;
+
+        app.request({
+          method: 'POST',
+          url: app.forum.attribute('apiUrl') + '/permission',
+          body: { permission, groupIds: next },
+        });
+      },
+    };
+  }
+
+  groupMatrix() {
+    const blocked = this.groupSetting('wszdb-flarumaichat.blocked-groups');
+    const override = this.groupSetting('wszdb-flarumaichat.manual-override-groups');
+    const trigger = this.triggerPermission();
+
     return (
       <div className="Form-group">
-        <label>{app.translator.trans('wszdb-flarumaichat.admin.settings.blocked_groups_label')}</label>
-        <div className="helpText">{app.translator.trans('wszdb-flarumaichat.admin.settings.blocked_groups_help')}</div>
-        <div className="ChatGptSettings-groups">
-          {app.store
-            .all<Group>('groups')
-            .filter((group) => group.id() !== Group.GUEST_ID)
-            .map((group) => (
-              <Checkbox
-                state={selected.includes(group.id()!)}
-                onchange={(checked: boolean) =>
-                  setting(JSON.stringify(checked ? [...selected, group.id()!] : selected.filter((id) => id !== group.id()!)))
-                }
-              >
-                {group.namePlural()}
-              </Checkbox>
-            ))}
-        </div>
+        <table className="ChatGptSettings-groups">
+          <thead>
+            <tr>
+              <th />
+              <th>{app.translator.trans('wszdb-flarumaichat.admin.settings.groups_blocked_column')}</th>
+              <th>{app.translator.trans('wszdb-flarumaichat.admin.settings.groups_trigger_column')}</th>
+              <th>{app.translator.trans('wszdb-flarumaichat.admin.settings.groups_override_column')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {app.store
+              .all<Group>('groups')
+              .filter((group) => group.id() !== Group.GUEST_ID)
+              .map((group) => {
+                const id = group.id()!;
+                const isAdmin = id === Group.ADMINISTRATOR_ID;
+
+                return (
+                  <tr>
+                    <th scope="row">{group.namePlural()}</th>
+                    <td>
+                      <Checkbox state={blocked.has(id)} onchange={(on: boolean) => blocked.toggle(id, on)} />
+                    </td>
+                    <td>
+                      {/* admins hold every permission, core hides them from its own grid too */}
+                      <Checkbox state={isAdmin || trigger.has(id)} disabled={isAdmin} onchange={(on: boolean) => trigger.toggle(id, on)} />
+                    </td>
+                    <td>
+                      <Checkbox
+                        state={override.has(id)}
+                        disabled={!blocked.has(id)}
+                        onchange={(on: boolean) => override.toggle(id, on)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+          </tbody>
+        </table>
       </div>
     );
   }
@@ -306,7 +362,6 @@ export default class ChatGptSettings extends ExtensionPage {
                 limits: { max: { secondary: 0 } },
               },
             })}
-            {this.blockedGroups()}
             {this.buildSettingComponent({
               type: 'flarum-tags.select-tags',
               setting: 'wszdb-flarumaichat.enabled-tags',
@@ -321,6 +376,11 @@ export default class ChatGptSettings extends ExtensionPage {
                 },
               },
             })}
+            <h3 className="ChatGptSettings-heading">
+              <i className="fas fa-users" /> {app.translator.trans('wszdb-flarumaichat.admin.settings.groups_heading')}
+            </h3>
+            <div className="helpText">{app.translator.trans('wszdb-flarumaichat.admin.settings.groups_help')}</div>
+            {this.groupMatrix()}
             <h3 className="ChatGptSettings-heading">
               <i className="fas fa-database" /> {app.translator.trans('wszdb-flarumaichat.admin.settings.context_heading')}
             </h3>
