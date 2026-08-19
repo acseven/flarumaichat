@@ -31,7 +31,7 @@ class ReplyToPost
         $actor = $event->actor;
         $discussion = $event->discussion;
 
-        if (Silence::reason($discussion)) {
+        if (Silence::reason($discussion, $actor)) {
             return;
         }
 

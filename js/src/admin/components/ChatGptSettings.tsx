@@ -1,6 +1,8 @@
 import app from 'flarum/admin/app';
 import ExtensionPage, { ExtensionPageAttrs } from 'flarum/admin/components/ExtensionPage';
 import Button from 'flarum/common/components/Button';
+import Checkbox from 'flarum/common/components/Checkbox';
+import Group from 'flarum/common/models/Group';
 import UsageStatsModal from './UsageStatsModal';
 
 // Fallback models in case cached models are not available
@@ -108,6 +110,37 @@ export default class ChatGptSettings extends ExtensionPage {
     return app.translator.trans('wszdb-flarumaichat.admin.settings.models_last_fetched', {
       date: date.toLocaleString(),
     });
+  }
+
+  blockedGroups() {
+    const setting = this.setting('wszdb-flarumaichat.blocked-groups', '[]');
+    let selected: string[] = [];
+
+    try {
+      selected = (JSON.parse(setting() || '[]') as any[]).map(String);
+    } catch (e) {
+      // a hand-edited setting row: start from nothing rather than break the page
+    }
+
+    return (
+      <div className="Form-group">
+        <label>{app.translator.trans('wszdb-flarumaichat.admin.settings.blocked_groups_label')}</label>
+        <div className="helpText">{app.translator.trans('wszdb-flarumaichat.admin.settings.blocked_groups_help')}</div>
+        {app.store
+          .all<Group>('groups')
+          .filter((group) => group.id() !== Group.GUEST_ID)
+          .map((group) => (
+            <Checkbox
+              state={selected.includes(group.id()!)}
+              onchange={(checked: boolean) =>
+                setting(JSON.stringify(checked ? [...selected, group.id()!] : selected.filter((id) => id !== group.id()!)))
+              }
+            >
+              {group.namePlural()}
+            </Checkbox>
+          ))}
+      </div>
+    );
   }
 
   content() {
@@ -258,6 +291,7 @@ export default class ChatGptSettings extends ExtensionPage {
                 limits: { max: { secondary: 0 } },
               },
             })}
+            {this.blockedGroups()}
             {this.buildSettingComponent({
               type: 'flarum-tags.select-tags',
               setting: 'wszdb-flarumaichat.enabled-tags',

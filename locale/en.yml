@@ -49,6 +49,8 @@ wszdb-flarumaichat:
       enable_on_discussion_started_help: The discussion will receive an answer based on content of first post when the discussion is started.
       blocked_tags_label: Blocked tags
       blocked_tags_help: The assistant stays silent in discussions carrying one of these tags, for everybody including admins, and the "Ask the assistant" post control is hidden there. Blocking a primary tag blocks its child tags too.
+      blocked_groups_label: Blocked groups
+      blocked_groups_help: The assistant never answers a post written by a member of one of these groups, whatever their other groups allow.
       enabled_tags_label: Enabled Tags
       enabled_tags_help: Select which tags will be used to generate the answer.
       answer_duration_label: Answer Duration
@@ -94,6 +96,7 @@ wszdb-flarumaichat:
       trigger_started: Asking the assistant, this takes a few seconds...
       error_blocked_tags: The assistant is blocked in this discussion's tags.
       error_private: The assistant does not answer in private discussions.
+      error_blocked_groups: The assistant does not answer posts from this member's group.
       error_not_comment: Only comments can be answered.
       error_failed: The assistant failed to answer. Check the server log.
       error_no_answer: The assistant had no answer for this post. Check the server log.

@@ -36,7 +36,7 @@ class ReplyToCommentPost
             return;
         }
 
-        if (Silence::reason($discussion)) {
+        if (Silence::reason($discussion, $actor)) {
             return;
         }
 

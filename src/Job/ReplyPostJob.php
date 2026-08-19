@@ -47,7 +47,7 @@ class ReplyPostJob extends AbstractJob
             // or given a blocked tag since the listener queued this job
             $post = $this->post->fresh();
 
-            if (!$post || !$post->discussion || ($reason = Silence::reason($post->discussion))) {
+            if (!$post || !$post->discussion || ($reason = Silence::reason($post->discussion, $post->user))) {
                 $log->info('[ChatGPT Job] Skipping - the assistant must stay out of this discussion', [
                     'post_id' => $this->post->id,
                     'reason' => $post && $post->discussion ? $reason : 'gone'

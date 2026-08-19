@@ -7,6 +7,7 @@
 
 use Flarum\Discussion\Discussion;
 use Flarum\Settings\SettingsRepositoryInterface;
+use Flarum\User\User;
 use Wszdb\FlarumAiChat\Silence;
 
 if (!interface_exists(SettingsRepositoryInterface::class)) {
@@ -15,6 +16,12 @@ if (!interface_exists(SettingsRepositoryInterface::class)) {
         public function get($key, $default = null);
         public function set($key, $value);
         public function delete($key);
+    }');
+}
+
+if (!class_exists(\Flarum\User\User::class)) {
+    eval('namespace Flarum\\User; class User {
+        public $groups = [];
     }');
 }
 
@@ -60,6 +67,7 @@ if (!function_exists('resolve')) {
 }
 
 require __DIR__ . '/../src/BlockedTags.php';
+require __DIR__ . '/../src/BlockedGroups.php';
 require __DIR__ . '/../src/Silence.php';
 
 $tag = function (int $id, ?int $parent = null) {
@@ -98,5 +106,28 @@ $both = new Discussion();
 $both->is_private = true;
 $both->tags = [$tag(7)];
 assert(Silence::reason($both) === 'private', 'privacy is reported before the tags');
+
+$settings->delete('wszdb-flarumaichat.blocked-tags');
+
+$group = function (int $id) {
+    return (object) ['id' => $id];
+};
+
+$member = new User();
+$member->groups = [$group(3), $group(8)];
+
+assert(Silence::reason($open, $member) === null, 'no blocked group, no reason to stay out');
+
+$settings->set('wszdb-flarumaichat.blocked-groups', json_encode([8]));
+
+assert(Silence::reason($open, $member) === 'blocked_groups', 'a blocked group keeps the assistant out');
+assert(Silence::reason($open) === null, 'without an author there is nothing to block');
+
+$other = new User();
+$other->groups = [$group(3)];
+assert(Silence::reason($open, $other) === null, 'other groups are left alone');
+
+// a blocked group does not open a private discussion, and privacy is reported first
+assert(Silence::reason($private, $member) === 'private', 'privacy is reported before the groups');
 
 echo "ok\n";

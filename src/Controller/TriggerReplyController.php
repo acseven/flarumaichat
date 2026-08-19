@@ -48,7 +48,7 @@ class TriggerReplyController implements RequestHandlerInterface
             throw new PermissionDeniedException();
         }
 
-        if ($reason = Silence::reason($post->discussion)) {
+        if ($reason = Silence::reason($post->discussion, $post->user)) {
             return $this->refuse('error_'.$reason, 403);
         }
 
