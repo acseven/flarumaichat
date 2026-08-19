@@ -61,6 +61,11 @@ export default class ChatGptSettings extends ExtensionPage {
       .request<{ models: any[]; count: number; last_fetched: number }>({
         method: 'POST',
         url: app.forum.attribute('apiUrl') + '/chatgpt/fetch-models',
+        // test what is typed in the form, not what was saved last
+        body: {
+          api_key: this.setting('wszdb-flarumaichat.api_key')(),
+          base_uri: this.setting('wszdb-flarumaichat.base_uri')(),
+        },
       })
       .then(
         (response) => {
@@ -82,6 +87,14 @@ export default class ChatGptSettings extends ExtensionPage {
             })
           );
 
+          // the models came from the typed key and URI: they mean nothing until those are saved
+          if (this.isChanged()) {
+            app.alerts.show(
+              { type: 'warning' },
+              app.translator.trans('wszdb-flarumaichat.admin.settings.models_fetched_unsaved')
+            );
+          }
+
           m.redraw();
         },
         (error) => {
@@ -91,7 +104,7 @@ export default class ChatGptSettings extends ExtensionPage {
             {
               type: 'error',
             },
-            app.translator.trans('wszdb-flarumaichat.admin.settings.fetch_models_error')
+            error?.response?.error || app.translator.trans('wszdb-flarumaichat.admin.settings.fetch_models_error')
           );
 
           m.redraw();

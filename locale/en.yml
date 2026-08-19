@@ -83,6 +83,7 @@ wszdb-flarumaichat:
       fetch_models_button: Fetch Latest Models from OpenAI
       models_fetched_success: "Successfully fetched {count} models from OpenAI"
       fetch_models_error: Failed to fetch models. Please check your API key and base URI settings.
+      models_fetched_unsaved: These models come from the API key and base URI you typed. Save the settings to keep them.
       models_last_fetched: "Last updated: {date}"
       models_never_fetched: Models have never been fetched. Click the button above to fetch the latest models.
 

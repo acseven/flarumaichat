@@ -6,7 +6,7 @@ use Flarum\Http\RequestUtil;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Support\Arr;
 use Laminas\Diactoros\Response\JsonResponse;
-use OpenAI\Client;
+use OpenAI;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -14,8 +14,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 class FetchModelsController implements RequestHandlerInterface
 {
     public function __construct(
-        protected SettingsRepositoryInterface $settings,
-        protected ?Client $client = null
+        protected SettingsRepositoryInterface $settings
     ) {
     }
 
@@ -24,15 +23,26 @@ class FetchModelsController implements RequestHandlerInterface
         $actor = RequestUtil::getActor($request);
         $actor->assertAdmin();
 
-        if (!$this->client) {
+        // the admin is trying a provider out, so the values typed into the form
+        // win over the saved ones; an empty field falls back to what is saved
+        $body = (array) $request->getParsedBody();
+        $apiKey = Arr::get($body, 'api_key') ?: $this->settings->get('wszdb-flarumaichat.api_key');
+        $baseUri = Arr::get($body, 'base_uri') ?: $this->settings->get('wszdb-flarumaichat.base_uri');
+
+        if (!$apiKey) {
             return new JsonResponse([
                 'error' => 'OpenAI client not configured. Please check your API key and base URI settings.'
             ], 400);
         }
 
         try {
+            $client = OpenAI::factory()
+                ->withApiKey($apiKey)
+                ->withBaseUri($baseUri)
+                ->make();
+
             // Fetch models from OpenAI API
-            $response = $this->client->models()->list();
+            $response = $client->models()->list();
 
             // Filter for chat-compatible models (gpt-*, chatgpt-*, o1-*, etc.)
             $chatModels = array_filter($response->data, function ($model) {
