@@ -10,6 +10,7 @@ use Flarum\Discussion\Discussion;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\Guest;
 use Flarum\User\User;
+use Illuminate\Support\Collection;
 use Wszdb\FlarumAiChat\Readers;
 use Wszdb\FlarumAiChat\RelatedThreads;
 use Wszdb\FlarumAiChat\ThreadSummary;
@@ -27,9 +28,11 @@ if (!interface_exists(SettingsRepositoryInterface::class)) {
 if (!class_exists(\Flarum\User\User::class)) {
     eval('namespace Flarum\\User; class User {
         public $id = 1;
+        public $groups;
         public static $forumOpen = false;
         public function can($permission) { return static::$forumOpen; }
         public function isGuest() { return false; }
+        public function setRelation($name, $value) { $this->$name = $value; return $this; }
     }');
 }
 
@@ -47,6 +50,14 @@ if (!class_exists(Discussion::class)) {
         public $is_private = false;
         public $tags = [];
         public function __construct($id = null) { $this->id = $id; }
+    }');
+}
+
+if (!class_exists(\Illuminate\Support\Collection::class)) {
+    eval('namespace Illuminate\\Support; class Collection implements \\Countable {
+        public array $items;
+        public function __construct(array $items = []) { $this->items = $items; }
+        public function count(): int { return count($this->items); }
     }');
 }
 
@@ -157,7 +168,11 @@ User::$forumOpen = true;
 assert(Readers::crossDiscussion($asker) instanceof Guest, 'an open forum is read as a guest');
 
 User::$forumOpen = false;
-assert(Readers::crossDiscussion($asker) === $asker, 'a closed forum falls back to the asker');
+$asker->setRelation('groups', new Collection(['staff']));
+$closed = Readers::crossDiscussion($asker);
+assert($closed !== $asker, 'a closed forum never reads as the asker themselves');
+assert($closed->groups->count() === 0, 'the fallback reader carries none of the asker groups');
+assert($asker->groups->count() === 1, 'the asker keeps their own groups');
 assert(Readers::crossDiscussion(null) instanceof Guest, 'no asker means a guest, never the bot');
 assert(Readers::crossDiscussion(new Guest()) instanceof Guest, 'a guest asker stays a guest');
 

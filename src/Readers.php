@@ -5,6 +5,7 @@ namespace Wszdb\FlarumAiChat;
 use Flarum\Discussion\Discussion;
 use Flarum\User\Guest;
 use Flarum\User\User;
+use Illuminate\Support\Collection;
 
 /**
  * Who the assistant reads the forum as. Two readers, never the bot user:
@@ -13,8 +14,9 @@ use Flarum\User\User;
  *    answer can already read that thread, and the threads the admin enabled
  *    keep their context;
  *  - anything quoted across discussions (linked, related, summaries, tools)
- *    is read as Guest — falling back to the asker when guests may not view
- *    the forum — and hidden, private or blocked-tag discussions are refused.
+ *    is read as Guest — falling back, when guests may not view the forum, to
+ *    the asker stripped of every group — and hidden, private or blocked-tag
+ *    discussions are refused.
  */
 class Readers
 {
@@ -27,12 +29,19 @@ class Readers
     {
         $guest = new Guest();
 
-        if ($guest->can('viewForum')) {
+        // never the bot user: without an asker there is nothing safer than a guest
+        if ($guest->can('viewForum') || !$asker || $asker->isGuest()) {
             return $guest;
         }
 
-        // never the bot user: without an asker there is nothing safer than a guest
-        return $asker && !$asker->isGuest() ? $asker : $guest;
+        // A closed forum still needs a reader, but never the asker as they are:
+        // whereVisibleTo() would hand a moderator's own tag-restricted threads
+        // to a public answer. User::permissions() reads the group ids off this
+        // relation, so an empty one leaves the guest and member rows alone.
+        $baseline = clone $asker;
+        $baseline->setRelation('groups', new Collection());
+
+        return $baseline;
     }
 
     /**
