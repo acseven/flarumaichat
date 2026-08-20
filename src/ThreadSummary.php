@@ -112,7 +112,9 @@ class ThreadSummary
         return [
             (int) ($row->last_post_id ?? 0),
             (int) ($row->hidden_mark ?? 0),
-            array_map('intval', Arr::sort(Arr::pluck($discussion->tags ?? [], 'id'))),
+            // array_values: Arr::sort keeps the original keys, so the same tags in
+            // another row order would compare unequal and miss the cache
+            array_values(array_map('intval', Arr::sort(Arr::pluck($discussion->tags ?? [], 'id')))),
             (bool) $discussion->is_private,
         ];
     }

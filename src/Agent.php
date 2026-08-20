@@ -210,9 +210,12 @@ class Agent
      */
     private function assembleMessages(string $head, array $history, string $tail): array
     {
-        // reasoning models take no system role: head and tail ride the first user turn
+        // reasoning models take no system role: the head rides a first user turn.
+        // The tail still goes last, because the model answers the last message and
+        // that message must be the post it was called on, not an older reply
         if ($this->isReasoningModel()) {
-            array_unshift($history, ['role' => 'user', 'content' => $head . "\n\n" . $tail]);
+            array_unshift($history, ['role' => 'user', 'content' => $head]);
+            $history[] = ['role' => 'user', 'content' => $tail];
 
             return $history;
         }
@@ -456,7 +459,7 @@ class Agent
     {
         $modelLower = strtolower($this->model);
 
-        return (bool) preg_match('~^(o[134](?:[-.]|$)|gpt-5)~', $modelLower);
+        return (bool) preg_match('~^(?:o[134]|gpt-5)(?:[-.]|$)~', $modelLower);
     }
 
 
@@ -589,15 +592,16 @@ class Agent
         }
 
         $blocks = [];
-        $summary = new ThreadSummary($reader, $this->threadSummaries() ? $this->summarizer() : null, max(200, $budget));
-        $summaryOf = fn (Discussion $discussion) => $summary->render($discussion);
+        $summarizer = $this->threadSummaries() ? $this->summarizer() : null;
 
         foreach ($found as $discussion) {
             if ($budget <= 0) {
                 break;
             }
 
-            $block = $summaryOf($discussion);
+            // the cap follows what is left, not what was there at the start:
+            // one cap for the whole loop let two threads spend the budget twice
+            $block = (new ThreadSummary($reader, $summarizer, max(200, $budget)))->render($discussion);
 
             if ($block === '') {
                 continue;

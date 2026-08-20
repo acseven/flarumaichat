@@ -123,6 +123,13 @@ assert($tight !== '' && strlen($tight) < 200, 'a small budget cuts the block dow
 // a non-structured file is passed through as text
 assert(str_contains($facts('notes.txt', 'anything'), 'plain text notes'), 'plain files pass through');
 
+// a file that parses but holds no records is not dumped whole: the raw path
+// skips the ranking and the field redaction
+file_put_contents($base . '/data/empty.csv', "name,state\n");
+assert($facts('empty.csv', 'name') === '', 'a header-only table yields nothing');
+file_put_contents($base . '/data/flat.json', '{"build":"1.6.1","token":"secret-value"}');
+assert($facts('flat.json', 'build token') === '', 'a record-less document yields nothing');
+
 array_map('unlink', glob($base . '/data/*') ?: []);
 @unlink($base . '/secret.json');
 

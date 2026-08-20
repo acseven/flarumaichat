@@ -118,7 +118,10 @@ class ContextFiles
 
         $name = basename($path);
 
-        // [header lines, records, match by term overlap instead of by name]
+        // [header lines, records, match by term overlap instead of by name].
+        // null means no parser for this file, and only then is it quoted whole;
+        // an empty list means it parsed and holds nothing to match, which must
+        // not fall through to a raw dump past the field redaction below
         [$header, $records, $byOverlap] = $this->source($name, $raw);
 
         if ($records === null) {
@@ -171,6 +174,8 @@ class ContextFiles
                 return $this->delimited($raw, "\t");
 
             case 'md':
+                // a Markdown file without headings has no records to rank, and
+                // quoting it whole is what an admin listing prose expects
                 $records = $this->markdown($raw);
 
                 return ['', $records ?: null, true];
@@ -188,9 +193,7 @@ class ContextFiles
     private function structured(array $data): array
     {
         if (array_is_list($data)) {
-            $records = array_values(array_filter($data, 'is_array'));
-
-            return ['', $records ?: null, false];
+            return ['', array_values(array_filter($data, 'is_array')), false];
         }
 
         $header = [];
@@ -204,11 +207,9 @@ class ContextFiles
             }
         }
 
-        $records = array_values(array_filter($list, 'is_array'));
-
         return [
             $this->cut(implode("\n", $header), self::MAX_HEADER_CHARS),
-            $records ?: null,
+            array_values(array_filter($list, 'is_array')),
             false,
         ];
     }
@@ -244,7 +245,7 @@ class ContextFiles
             }
         }
 
-        return ['', $records ?: null, false];
+        return ['', $records, false];
     }
 
     /**
