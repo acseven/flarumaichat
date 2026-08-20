@@ -51,9 +51,10 @@ class TriggerReplyController implements RequestHandlerInterface
 
         $reason = Silence::reason($post->discussion, $post->user);
 
-        // asking by hand is the point of the override: the block only holds
-        // against the assistant answering on its own
-        if ($reason === 'blocked_groups' && BlockedGroups::manualOverride($post->user)) {
+        // asking by hand is the point of the override: a block on the author's
+        // group or on the discussion's tags only holds against the assistant
+        // answering on its own. Privacy is not a block and stands.
+        if (in_array($reason, ['blocked_groups', 'blocked_tags'], true) && BlockedGroups::manualOverride($post->user)) {
             $reason = null;
         }
 

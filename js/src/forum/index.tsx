@@ -4,6 +4,15 @@ import Button from 'flarum/common/components/Button';
 import PostUser from 'flarum/forum/components/PostUser';
 import PostControls from 'flarum/forum/utils/PostControls';
 
+// mirrors BlockedGroups::manualOverride(): the author's group may lift a block for a request made by hand
+function isOverridden(post: any): boolean {
+  const override: number[] = app.forum.attribute('chatGptManualOverrideGroups') || [];
+
+  if (!override.length) return false;
+
+  return (post?.user()?.groups?.() || []).some((group: any) => typeof group?.id === 'function' && override.includes(Number(group.id())));
+}
+
 // mirrors BlockedTags::block() on the server, so the control is not offered where it would be refused
 function isBlocked(discussion: any): boolean {
   const blocked: number[] = app.forum.attribute('chatGptBlockedTags') || [];
@@ -59,7 +68,7 @@ app.initializers.add('wszdb-flarumaichat', () => {
   extend(PostControls, 'moderationControls', function (items: any, post: any) {
     if (!post.attribute('canTriggerChatGptAssistant')) return;
     if (post.contentType() !== 'comment' || post.isHidden()) return;
-    if (isBlocked(post.discussion())) return;
+    if (isBlocked(post.discussion()) && !isOverridden(post)) return;
 
     items.add(
       'triggerChatGptAssistant',

@@ -50,10 +50,12 @@ wszdb-flarumaichat:
       blocked_tags_label: Blocked tags
       blocked_tags_help: The assistant stays silent in discussions carrying one of these tags, for everybody including admins, and the "Ask the assistant" post control is hidden there. Blocking a primary tag blocks its child tags too.
       groups_heading: Member group permissions
-      groups_help: "Rows are groups. Blocked and Manual override are saved with the Save button; May ask by hand is the forum permission \"Ask the assistant to answer a post\" and saves the moment you toggle it."
       groups_blocked_column: Never answered
+      groups_blocked_help: The assistant never answers a post written by a member of this group on its own. Saved with the Save button.
       groups_trigger_column: May ask by hand
-      groups_override_column: Asking by hand still works
+      groups_trigger_help: Members of this group see "Ask the assistant" in the post menu. This is the forum permission "Ask the assistant to answer a post", so it saves the moment you toggle it, not with the Save button. Admins always hold it.
+      groups_override_column: Asking by hand override
+      groups_override_help: A request made by hand answers a post by this group's members even where the assistant is blocked, whether by the group itself or by the discussion's tags. Private discussions still stay closed. Saved with the Save button.
       enabled_tags_label: Tags answered on its own
       enabled_tags_help: The assistant only starts an answer by itself in discussions carrying one of these tags. Leave it empty for every tag. Blocked tags win, and asking by hand ignores this list.
       answer_duration_label: Answer Duration

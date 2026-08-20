@@ -52,7 +52,8 @@ return [
         ->delete('/chatgpt/stats', 'chatgpt.stats.reset', StatsController::class),
 
     (new Extend\ApiSerializer(ForumSerializer::class))
-        ->attribute('chatGptBlockedTags', fn () => BlockedTags::ids()),
+        ->attribute('chatGptBlockedTags', fn () => BlockedTags::ids())
+        ->attribute('chatGptManualOverrideGroups', fn () => BlockedGroups::overrideIds()),
 
     (new Extend\ApiSerializer(PostSerializer::class))
         ->attribute('canTriggerChatGptAssistant', fn ($serializer, $post) => $post->discussion

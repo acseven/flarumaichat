@@ -28,7 +28,12 @@ class BlockedGroups
      */
     public static function manualOverride(?User $user): bool
     {
-        return static::member($user, static::read('wszdb-flarumaichat.manual-override-groups'));
+        return static::member($user, static::overrideIds());
+    }
+
+    public static function overrideIds(): array
+    {
+        return static::read('wszdb-flarumaichat.manual-override-groups');
     }
 
     private static function read(string $key): array

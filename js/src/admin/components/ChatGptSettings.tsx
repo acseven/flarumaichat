@@ -2,6 +2,7 @@ import app from 'flarum/admin/app';
 import ExtensionPage, { ExtensionPageAttrs } from 'flarum/admin/components/ExtensionPage';
 import Button from 'flarum/common/components/Button';
 import Checkbox from 'flarum/common/components/Checkbox';
+import Tooltip from 'flarum/common/components/Tooltip';
 import Group from 'flarum/common/models/Group';
 import UsageStatsModal from './UsageStatsModal';
 
@@ -164,6 +165,18 @@ export default class ChatGptSettings extends ExtensionPage {
     };
   }
 
+  /** A matrix header: the column's name, and an i holding what it does. */
+  groupColumn(name: string) {
+    return (
+      <th>
+        {app.translator.trans('wszdb-flarumaichat.admin.settings.groups_' + name + '_column')}{' '}
+        <Tooltip text={app.translator.trans('wszdb-flarumaichat.admin.settings.groups_' + name + '_help')}>
+          <i className="fas fa-info-circle ChatGptSettings-info" />
+        </Tooltip>
+      </th>
+    );
+  }
+
   groupMatrix() {
     const blocked = this.groupSetting('wszdb-flarumaichat.blocked-groups');
     const override = this.groupSetting('wszdb-flarumaichat.manual-override-groups');
@@ -175,9 +188,9 @@ export default class ChatGptSettings extends ExtensionPage {
           <thead>
             <tr>
               <th />
-              <th>{app.translator.trans('wszdb-flarumaichat.admin.settings.groups_blocked_column')}</th>
-              <th>{app.translator.trans('wszdb-flarumaichat.admin.settings.groups_trigger_column')}</th>
-              <th>{app.translator.trans('wszdb-flarumaichat.admin.settings.groups_override_column')}</th>
+              {this.groupColumn('blocked')}
+              {this.groupColumn('trigger')}
+              {this.groupColumn('override')}
             </tr>
           </thead>
           <tbody>
@@ -379,7 +392,6 @@ export default class ChatGptSettings extends ExtensionPage {
             <h3 className="ChatGptSettings-heading">
               <i className="fas fa-users" /> {app.translator.trans('wszdb-flarumaichat.admin.settings.groups_heading')}
             </h3>
-            <div className="helpText">{app.translator.trans('wszdb-flarumaichat.admin.settings.groups_help')}</div>
             {this.groupMatrix()}
             <h3 className="ChatGptSettings-heading">
               <i className="fas fa-database" /> {app.translator.trans('wszdb-flarumaichat.admin.settings.context_heading')}
