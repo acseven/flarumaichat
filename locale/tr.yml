@@ -2,6 +2,34 @@ wszdb-flarumaichat:
   # For more details on the format
   # Checkout https://docs.flarum.org/extend/i18n/#appendix-a-standard-key-format
   admin:
+    usage:
+      button: View usage stats
+      title: Assistant usage
+      api_heading: API calls
+      posts_heading: Answers posted
+      model: Model
+      requests: Requests
+      failures: Failed requests
+      prompt_tokens: Prompt tokens
+      completion_tokens: Completion tokens
+      cached_tokens: Cached prompt tokens
+      cache_hit: Cache hit rate
+      total_tokens: Total tokens
+      avg_tokens: Tokens per request
+      since: Counting since
+      last: Last request
+      answers: Answers
+      answers_7d: Last 7 days
+      answers_30d: Last 30 days
+      discussions: Discussions answered
+      avg_length: Average answer length
+      first_answer: First answer
+      last_answer: Last answer
+      chart_answers: Answers per day
+      chart_tokens: Tokens per day
+      help: Token counts start at the moment this version was installed. Answer counts come from the posts of the bot user.
+      reset: Reset counters
+      reset_confirm: Click again to reset
     settings:
       api_key_label: API Key
       api_key_help: Open API key üretmek için <a>openai.com</a>.
@@ -21,28 +49,77 @@ wszdb-flarumaichat:
       prompt_help: Yanıtı oluşturmak için kullanılacak isteği girin. [title] değişkenini sabit bırakınız.
       enable_on_discussion_started_label: Tartışma başlatıldığında etkinleştir
       enable_on_discussion_started_help: Tartışma başlatıldığında, tartışmanın içeriğine dayalı bir yanıt alır.
+      blocked_tags_label: Blocked tags
+      blocked_tags_help: The assistant stays silent in discussions carrying one of these tags, for everybody including admins, and the "Ask the assistant" post control is hidden there. Blocking a primary tag blocks its child tags too.
+      groups_heading: Member group permissions
+      groups_blocked_column: Never answered
+      groups_blocked_help: The assistant never answers a post written by a member of this group on its own. Saved with the Save button.
+      groups_trigger_column: May ask by hand
+      groups_trigger_help: Members of this group see "Ask the assistant" in the post menu. This is the forum permission "Ask the assistant to answer a post", so it saves the moment you toggle it, not with the Save button. Admins always hold it.
+      groups_override_column: Asking by hand override
+      groups_override_help: A request made by hand answers a post by this group's members even where the assistant is blocked, whether by the group itself or by the discussion's tags. Private discussions still stay closed. Saved with the Save button.
+      enabled_tags_label: Aktif Etiketler
+      enabled_tags_help: Yanıt oluşturmak için kullanılacak etiketleri seçin.
       answer_duration_label: Cevap Verme Süresi
       answer_duration_help: Cevap verme süresi dakika cinsinden. Varsayılan 5 dakika.
+      answer_delay_label: Answer Delay
+      answer_delay_help: Extra wait in seconds before answering, added to the Answer Duration. Without a queue worker the site runs the answer inside the posting request, so a wait up to 60 seconds holds that request open and a longer one drops the answer. Default is 5.
       enable_on_reply_label: Yanıt yoksa gönderiye yanıt ver
       enable_on_reply_help: Yanıt yoksa gönderiye yanıt ver
       continue_to_reply_label: Yanıt vermeye devam et
       continue_to_reply_help: Yanıt varsa yanıt vermeye devam et
       continue_to_reply_count_label: Yanıt vermeye devam etme sayısı
       continue_to_reply_count_help: Botun kaç kez yanıt vermeye devam edeceği. Varsayılan 5'tir.
+      zai_heading: Z.AI / GLM
+      context_heading: Site data
+      context_files_label: Data files
+      context_files_help: "One path per line, relative to the Flarum installation, for example vendor/your-vendor/your-extension/resources/data.json. JSON, YAML, CSV, TSV and Markdown files are searched record by record (a Markdown file is chunked by heading): records about what the post discusses are handed to the model as compact facts, best match first, and a record's related ids pull those records in behind it. Any other file is passed as plain text, cut to the budget, and goes to the model with every single answer, whatever the post is about, so only list files whose full content may leave the site. Leave empty to feed nothing."
+      linked_threads_label: Read linked threads
+      linked_threads_help: When a post links to a discussion on this forum, its posts are quoted into the prompt, so the assistant answers about the thread instead of saying it cannot open links. Up to two threads and twenty posts each, within the character budget below. Threads are read as a guest sees the forum, and hidden, private or blocked-tag threads are never quoted.
+      thread_summaries_label: Summarize quoted threads
+      thread_summaries_help: When on, a linked or related thread is handed over as a short summary (cached until the thread changes) instead of its raw posts. Each stale summary costs one small extra API call. Default is on.
+      related_threads_label: Quote related threads
+      related_threads_help: When on, discussions whose title is about the same thing are quoted into the answer, read the same guest-way as linked threads. Title matching only. Default is off.
+      related_threads_count_label: Related threads count
+      related_threads_count_help: How many related threads to quote at most. Default is 2.
+      context_chars_label: Context characters
+      context_chars_help: How much of the data files, linked threads and related threads one prompt may carry, in characters (6000 is roughly 1500 tokens). Raise it only as far as the model's context window allows.
+      history_chars_label: History characters
+      history_chars_help: How much of the discussion's earlier posts one prompt may carry, newest first, in characters. Default is 8000.
+      tools_enabled_label: Let the model call tools
+      tools_enabled_help: 'Off by default. When on, the model may read a discussion by id and search discussion titles while it answers. The calls go through the same guest-side reader and tag blocks as quoted threads, and are capped at a few executions per answer. Verify your provider supports function calling together with the web search tool before turning this on.'
+      web_search_label: Web search
+      web_search_help: Let the model search the web while it answers. GLM models only, charged per search by z.ai, and it adds seconds to the answer.
+      web_search_domains_label: Search only these domains
+      web_search_domains_help: "One domain per line, for example chdk.fandom.com. Leave empty to search the whole web."
+      glm_thinking_label: GLM thinking
+      glm_thinking_help: Only for GLM models. Lets the model reason before answering. Slower (~70s vs ~15s) and the thinking tokens count against Max Tokens, so raise Max Tokens if you turn this on. Default is off.
+      reply_in_private_label: Reply in private discussions
+      reply_in_private_help: When off, the bot ignores private discussions and private messages. Default is off.
       queue_active_label: Kuyruk Aktif Hale Getir
       queue_active_help: Kuyruk aktif hale getirildiğinde, botun yanıt vermesi için kuyruğa eklenir.
-      enabled_tags_label: Aktif Etiketler
-      enabled_tags_help: Yanıt oluşturmak için kullanılacak etiketleri seçin.
       moderation_label: Moderasyon
       moderation_help: Eğer moderasyon etkinse, kullanıcı uygunsuz içerik içeren bir tartışma veya yanıt oluşturamaz.
       fetch_models_label: OpenAI Modellerini Yenile
       fetch_models_button: OpenAI'dan Son Modelleri Al
       models_fetched_success: "OpenAI'dan {count} model başarıyla alındı"
       fetch_models_error: Modeller alınamadı. Lütfen API anahtarınızı ve temel URI ayarlarınızı kontrol edin.
+      models_fetched_unsaved: These models come from the API key and base URI you typed. Save the settings to keep them.
       models_last_fetched: "Son güncelleme: {date}"
       models_never_fetched: Modeller hiç alınmadı. En son modelleri almak için yukarıdaki düğmeye tıklayın.
 
     permissions:
       use_chatgpt_assistant_label: Use ChatGPT Assistant
+      trigger_chatgpt_assistant_label: Ask the assistant to answer a post
 
   forum:
+    post_controls:
+      trigger_assistant: Ask the assistant
+      trigger_started: Asking the assistant, this takes a few seconds...
+      error_blocked_tags: The assistant is blocked in this discussion's tags.
+      error_private: The assistant does not answer in private discussions.
+      error_blocked_groups: The assistant does not answer posts from this member's group.
+      error_not_comment: Only comments can be answered.
+      error_failed: The assistant failed to answer. Check the server log.
+      error_no_answer: The assistant had no answer for this post. Check the server log.
+
