@@ -161,15 +161,29 @@ class Agent
         $budget = (int) $settings->get('wszdb-flarumaichat.context_chars') ?: ContextFiles::MAX_TOTAL_CHARS;
         $subject = $title . "\n" . $content . ($extra !== '' ? "\n" . $extra : '');
 
-        $blocks = [];
-
         $facts = $this->contextFacts($subject, $budget);
         $threads = $this->linkedThreads($subject, $asker, $budget - strlen($facts));
         $related = $this->relatedThreads($title, $discussion, $asker, $subject, $budget - strlen($facts) - strlen($threads));
 
-        foreach ([$facts, $threads, $related] as $block) {
+        // each block keeps the sentence that says what it is and how much weight
+        // it carries. The sentence is ours and stays outside the fence; only the
+        // quoted text goes inside it
+        $leads = [
+            [$facts, "Facts below come from this site's own data files. They are current and"
+                . ' authoritative: prefer them over what you remember, and never name a version, file or'
+                . ' link that is not in them.'],
+            [$threads, 'The conversation links to threads on this same forum, quoted below. You have'
+                . ' read them: answer about what they say, and never claim you cannot open a link to this'
+                . ' forum.'],
+            [$related, 'Other threads on this forum about the same thing, quoted below as background.'
+                . ' They were not linked by anyone: use them only where they help.'],
+        ];
+
+        $blocks = [];
+
+        foreach ($leads as [$block, $lead]) {
             if ($block !== '') {
-                $blocks[] = $fence->wrap($block);
+                $blocks[] = $lead . "\n\n" . $fence->wrap($block);
             }
         }
 

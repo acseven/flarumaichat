@@ -39,7 +39,7 @@ class FetchModelsController implements RequestHandlerInterface
         // the same safety check the client factory runs, before anything dials out
         try {
             $baseUri = Endpoint::assertSafe($baseUri);
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Throwable $e) {
             return new JsonResponse(['error' => $e->getMessage()], 400);
         }
 

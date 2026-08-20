@@ -33,10 +33,7 @@ class History
      */
     public function turns(Discussion $discussion, int $beforeNumber, int $botId, int $maxChars): array
     {
-        $posts = $discussion->posts()
-            ->where('type', 'comment')
-            ->whereNull('hidden_at')
-            ->whereVisibleTo($this->asker)
+        $window = $this->visible($discussion)
             ->where('number', '<', $beforeNumber)
             ->orderByDesc('number')
             ->limit(self::MAX_POSTS)
@@ -46,11 +43,39 @@ class History
 
         $rows = [];
 
-        foreach ($posts as $post) {
+        foreach ($window as $post) {
             $rows[] = ['number' => (int) $post->number, 'user_id' => $post->user_id, 'content' => (string) $post->content];
         }
 
+        // past MAX_POSTS the window no longer reaches the opening post, and that
+        // post is what the thread is about: fetch it on its own and lead with it
+        if ($beforeNumber > 1 && ($rows === [] || $rows[0]['number'] > 1)) {
+            $first = $this->visible($discussion)->where('number', 1)->first();
+
+            if ($first) {
+                $missing = ($rows[0]['number'] ?? $beforeNumber) - 2;
+
+                if ($missing > 0) {
+                    array_unshift($rows, ['number' => 1, 'user_id' => null, 'content' => '(' . $missing . ' older replies left out)']);
+                }
+
+                array_unshift($rows, [
+                    'number' => 1,
+                    'user_id' => $first->user_id,
+                    'content' => (string) $first->content,
+                ]);
+            }
+        }
+
         return static::select($rows, $botId, $maxChars);
+    }
+
+    private function visible(Discussion $discussion)
+    {
+        return $discussion->posts()
+            ->where('type', 'comment')
+            ->whereNull('hidden_at')
+            ->whereVisibleTo($this->asker);
     }
 
     /**

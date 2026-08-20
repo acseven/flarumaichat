@@ -3,6 +3,7 @@
 namespace Wszdb\FlarumAiChat\Middleware;
 
 use Flarum\Api\JsonApiResponse;
+use Flarum\Discussion\Discussion;
 use Flarum\Http\RequestUtil;
 use Flarum\Http\UrlGenerator;
 use Flarum\Settings\SettingsRepositoryInterface;
@@ -52,9 +53,8 @@ class ModerationMiddleware implements MiddlewareInterface
         // the controllers enforce the real permission, this only stops paying
         // for callers who would never get past them
         $actor = RequestUtil::getActor($request);
-        $starting = $path === '/discussions';
 
-        if ($actor->isGuest() || ($starting && $actor->cannot('startDiscussions'))) {
+        if ($actor->isGuest() || !$this->mayPost($request, $actor, $path)) {
             return $handler->handle($request);
         }
 
@@ -99,6 +99,28 @@ class ModerationMiddleware implements MiddlewareInterface
     }
 
     /**
+     * Whether this actor could post here at all. The controllers enforce the
+     * real permission; this only keeps the billed call away from callers who
+     * would never reach them.
+     */
+    private function mayPost(ServerRequestInterface $request, $actor, string $path): bool
+    {
+        if ($path === '/discussions') {
+            return $actor->can('startDiscussions');
+        }
+
+        $id = $request->getParsedBody()['data']['relationships']['discussion']['data']['id'] ?? null;
+
+        if (!is_scalar($id) || !ctype_digit((string) $id)) {
+            return false;
+        }
+
+        $discussion = Discussion::whereVisibleTo($actor)->find((int) $id);
+
+        return $discussion && $actor->can('reply', $discussion);
+    }
+
+    /**
      * A per-actor counter in the cache store. The extension answers posts from
      * a queue, so a member cannot race this window meaningfully.
      */
@@ -108,8 +130,8 @@ class ModerationMiddleware implements MiddlewareInterface
 
         try {
             $cache = resolve('cache.store');
-            $count = (int) $cache->get($key) + 1;
-            $cache->put($key, $count, 3600);
+            $cache->add($key, 0, 3600);
+            $count = (int) $cache->increment($key);
         } catch (\Throwable) {
             // no cache store: the ceiling is off, the check still runs
             return false;

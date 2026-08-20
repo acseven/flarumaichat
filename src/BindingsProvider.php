@@ -17,6 +17,10 @@ class BindingsProvider extends AbstractServiceProvider
     public function boot(Container $container)
     {
         Action::setEventDispatcher($this->container->make(Dispatcher::class));
-        Action::setAgent($this->container->make(Agent::class));
+
+        // ponytail: Action::$agent is read nowhere, and building the agent here
+        // cost a user lookup, a client build and a DNS resolution on every single
+        // request, page views included. Jobs and listeners take the agent from the
+        // container when they actually answer.
     }
 }

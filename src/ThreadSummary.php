@@ -85,8 +85,8 @@ class ThreadSummary
 
     /**
      * Whether a stored summary still matches its discussion. The markers are
-     * everything a stale summary would leak: a newer post, a post hidden after
-     * the fact, a new tag, a turn to privacy.
+     * everything a stale summary would leak: a newer post, a change in which
+     * posts are hidden, a new tag, a turn to privacy.
      */
     public static function fresh(?array $stored, array $markers): bool
     {
@@ -103,12 +103,15 @@ class ThreadSummary
     {
         $row = $discussion->posts()
             ->where('type', 'comment')
-            ->selectRaw('COALESCE(MAX(id), 0) as last_post_id, COALESCE(SUM(hidden_at IS NOT NULL), 0) as hidden_count')
+            // the hidden posts are identified, not counted: un-hiding one post and
+            // hiding another would leave a count unchanged and serve a stale summary
+            ->selectRaw('COALESCE(MAX(id), 0) as last_post_id,'
+                . ' COALESCE(SUM(CASE WHEN hidden_at IS NOT NULL THEN id ELSE 0 END), 0) as hidden_mark')
             ->first();
 
         return [
             (int) ($row->last_post_id ?? 0),
-            (int) ($row->hidden_count ?? 0),
+            (int) ($row->hidden_mark ?? 0),
             array_map('intval', Arr::sort(Arr::pluck($discussion->tags ?? [], 'id'))),
             (bool) $discussion->is_private,
         ];

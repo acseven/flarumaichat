@@ -27,7 +27,7 @@ class ClientProvider extends AbstractServiceProvider
             $this->container->singleton(Client::class, function () use ($settings) {
                 try {
                     return $this->getClient($settings);
-                } catch (\InvalidArgumentException $e) {
+                } catch (\Throwable $e) {
                     resolve('log')->error('[ChatGPT] Refusing the configured base URI', ['error' => $e->getMessage()]);
 
                     return null;

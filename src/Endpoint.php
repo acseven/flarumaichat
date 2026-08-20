@@ -33,7 +33,7 @@ class Endpoint
             || str_starts_with($ip, '127.')
             || str_starts_with($ip, '169.254.')
             || str_starts_with(strtolower($ip), 'fe80:')
-            || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RESERVATION) === false;
+            || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
 
         if ($unsafe) {
             throw new \InvalidArgumentException("'{$host}' resolves to a local or private address");

@@ -12,7 +12,9 @@ namespace Wszdb\FlarumAiChat;
  */
 class Fence
 {
-    private const MARKER = '~^[ \t]*(BEGIN|END)-DATA-[A-Za-z0-9]*[ \t]*$~im';
+    // anywhere, not only on a line of its own: a marker forged inside a
+    // sentence is still a marker to the model
+    private const MARKER = '~(BEGIN|END)-DATA-[A-Za-z0-9]*~i';
 
     public readonly string $nonce;
 
