@@ -88,6 +88,8 @@ wszdb-flarumaichat:
       history_chars_help: How much of the discussion's earlier posts one prompt may carry, newest first, in characters. Default is 8000.
       tools_enabled_label: Let the model call tools
       tools_enabled_help: 'Off by default. When on, the model may read a discussion by id and search discussion titles while it answers. The calls go through the same guest-side reader and tag blocks as quoted threads, and are capped at a few executions per answer. Verify your provider supports function calling together with the web search tool before turning this on.'
+      mentions_label: Answer when called by name
+      mentions_help: 'Off by default. When on, a post that mentions the assistant is answered even after it has used up its reply count for that discussion, and whether or not it keeps answering replies on its own. Members of a group that holds the asking-by-hand override are answered past a group or tag block as well, and past the tags the assistant is otherwise kept to. Private discussions stay closed, and the member still needs permission to use the assistant. Requires the Mentions extension for the @ autocomplete, though a plain @username in the text is read as a call too.'
       web_search_label: Web search
       web_search_help: Let the model search the web while it answers. GLM models only, charged per search by z.ai, and it adds seconds to the answer.
       web_search_domains_label: Search only these domains

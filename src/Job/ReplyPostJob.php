@@ -9,6 +9,7 @@ use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Wszdb\FlarumAiChat\Agent;
+use Wszdb\FlarumAiChat\BlockedGroups;
 use Wszdb\FlarumAiChat\Silence;
 
 class ReplyPostJob extends AbstractJob
@@ -23,7 +24,7 @@ class ReplyPostJob extends AbstractJob
      */
     public $tries = 5;
 
-    public function __construct(protected CommentPost $post)
+    public function __construct(protected CommentPost $post, protected bool $mentioned = false)
     {
     }
 
@@ -47,7 +48,17 @@ class ReplyPostJob extends AbstractJob
             // or given a blocked tag since the listener queued this job
             $post = $this->post->fresh();
 
-            if (!$post || !$post->discussion || ($reason = Silence::reason($post->discussion, $post->user))) {
+            $reason = $post && $post->discussion ? Silence::reason($post->discussion, $post->user) : null;
+
+            // the same override the listener granted, checked again against
+            // settings that may have changed while the answer waited
+            if ($this->mentioned
+                && in_array($reason, ['blocked_groups', 'blocked_tags'], true)
+                && BlockedGroups::manualOverride($post->user)) {
+                $reason = null;
+            }
+
+            if (!$post || !$post->discussion || $reason) {
                 $log->info('[ChatGPT Job] Skipping - the assistant must stay out of this discussion', [
                     'post_id' => $this->post->id,
                     'reason' => $post && $post->discussion ? $reason : 'gone'
@@ -57,8 +68,10 @@ class ReplyPostJob extends AbstractJob
 
             $settings = resolve(SettingsRepositoryInterface::class);
 
+            // a post that calls the assistant by name is answered whether or
+            // not it keeps answering replies on its own
             $continueToReply = $settings->get('wszdb-flarumaichat.continue_to_reply');
-            if (!$continueToReply) {
+            if (!$continueToReply && !$this->mentioned) {
                 $log->info('[ChatGPT Job] Skipping - continue_to_reply disabled', [
                     'post_id' => $this->post->id,
                     'continue_to_reply' => $continueToReply
@@ -70,7 +83,7 @@ class ReplyPostJob extends AbstractJob
                 'post_id' => $this->post->id
             ]);
 
-            $agent->repliesToCommentPost($post);
+            $agent->repliesToCommentPost($post, $this->mentioned);
 
             $log->info('[ChatGPT Job] ReplyPostJob completed successfully', [
                 'post_id' => $this->post->id

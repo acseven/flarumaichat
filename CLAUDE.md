@@ -37,11 +37,15 @@ All are rows of `wszdb-flarumaichat.*`, edited on the extension page.
 | `thread_summaries` | Hand a linked or related thread over as a cached summary instead of raw posts. |
 | `related_threads`, `related_threads_count` | Quote discussions whose title is about the same thing. Off by default. |
 | `tools_enabled` | Let the model call `read_thread` / `search_threads` while answering. Off by default. |
+| `mentions` | Answer a post that calls the assistant by name, past its reply count for that discussion. A member of a `manual-override-groups` group is answered past a group or tag block and past `enabled-tags` too. Off by default. |
 | `glm_thinking`, `web_search`, `web_search_domains` | z.ai GLM options. |
 
 Two guards decide whether the assistant may answer: `Silence::reason()` (the
-discussion and the post's author) and, for the post control only,
-`BlockedGroups::manualOverride()`. `max_tokens` caps the answer, not the
+discussion and the post's author) and, for the post control and a mention,
+`BlockedGroups::manualOverride()`. A mention is read out of the post content
+(`Mentions::callsBot()`), not out of flarum/mentions' pivot table: that
+extension ships no event and writes its rows from its own `Posted` listener,
+with no ordering against ours. `max_tokens` caps the answer, not the
 context.
 
 Reading is split in two (`Readers`): same-discussion history is read as the
@@ -60,6 +64,7 @@ php -d zend.assertions=1 scripts/test-context-files.php
 php -d zend.assertions=1 scripts/test-history.php
 php -d zend.assertions=1 scripts/test-linked-discussions.php
 php -d zend.assertions=1 scripts/test-threads-tools.php
+php -d zend.assertions=1 scripts/test-mentions.php
 php scripts/test-usage.php
 ```
 

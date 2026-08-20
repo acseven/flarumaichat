@@ -99,6 +99,8 @@ return [
         ->default('wszdb-flarumaichat.related_threads_count', 2)
         // let the model call tools; verify the provider first
         ->default('wszdb-flarumaichat.tools_enabled', false)
+        // answer a post that calls the assistant by name
+        ->default('wszdb-flarumaichat.mentions', false)
         // new setting for answer duration in minutes (default 5)
         ->default('wszdb-flarumaichat.answer_duration', 0)
         // extra wait in seconds, added on top of the answer duration

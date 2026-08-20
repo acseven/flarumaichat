@@ -360,6 +360,12 @@ export default class ChatGptSettings extends ExtensionPage {
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.continue_to_reply_help'),
             })}
             {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.mentions',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.mentions_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.mentions_help'),
+            })}
+            {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.continue_to_reply_count',
               type: 'number',
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.continue_to_reply_count_label'),
