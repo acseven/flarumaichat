@@ -9,7 +9,7 @@ use Flarum\Settings\SettingsRepositoryInterface;
  */
 class Usage
 {
-    public const KEYS = ['requests', 'failures', 'prompt_tokens', 'completion_tokens'];
+    public const KEYS = ['requests', 'failures', 'prompt_tokens', 'completion_tokens', 'cached_tokens'];
 
     // ponytail: running totals in the settings table, no history and no locking.
     // The queue worker answers one post at a time, so the read-modify-write is
@@ -18,7 +18,8 @@ class Usage
         int $promptTokens = 0,
         int $completionTokens = 0,
         bool $failed = false,
-        ?SettingsRepositoryInterface $settings = null
+        ?SettingsRepositoryInterface $settings = null,
+        int $cachedTokens = 0
     ): void {
         $settings = $settings ?? resolve(SettingsRepositoryInterface::class);
 
@@ -34,6 +35,7 @@ class Usage
         $add('failures', $failed ? 1 : 0);
         $add('prompt_tokens', $promptTokens);
         $add('completion_tokens', $completionTokens);
+        $add('cached_tokens', $cachedTokens);
 
         if (!$settings->get('wszdb-flarumaichat.usage_since')) {
             $settings->set('wszdb-flarumaichat.usage_since', time());

@@ -69,6 +69,7 @@ if (!function_exists('resolve')) {
 require __DIR__ . '/../src/BlockedTags.php';
 require __DIR__ . '/../src/BlockedGroups.php';
 require __DIR__ . '/../src/Silence.php';
+require __DIR__ . '/../src/Readers.php';
 
 $tag = function (int $id, ?int $parent = null) {
     return (object) ['id' => $id, 'parent_id' => $parent];
@@ -136,5 +137,19 @@ $settings->set('wszdb-flarumaichat.manual-override-groups', json_encode([8]));
 assert(\Wszdb\FlarumAiChat\BlockedGroups::manualOverride($member) === true, 'the override names the group');
 assert(\Wszdb\FlarumAiChat\BlockedGroups::manualOverride($other) === false, 'other groups have no override');
 assert(Silence::reason($open, $member) === 'blocked_groups', 'the override leaves the automatic answer blocked');
+
+// the cross-discussion reader policy: what may be quoted into another thread
+$settings->set('wszdb-flarumaichat.blocked-tags', json_encode([7]));
+
+assert(\Wszdb\FlarumAiChat\Readers::crossOk($open) === true, 'a plain discussion may be quoted');
+assert(\Wszdb\FlarumAiChat\Readers::crossOk($private) === false, 'a private discussion is never quoted');
+assert(\Wszdb\FlarumAiChat\Readers::crossOk($tagged) === false, 'a blocked-tag discussion is never quoted');
+assert(\Wszdb\FlarumAiChat\Readers::crossOk($child) === false, 'a blocked parent tag is never quoted either');
+
+$settings->delete('wszdb-flarumaichat.blocked-tags');
+$settings->delete('wszdb-flarumaichat.blocked-groups');
+$settings->delete('wszdb-flarumaichat.manual-override-groups');
+
+assert(\Wszdb\FlarumAiChat\Readers::crossOk($tagged) === true, 'without blocked tags the discussion is quotable again');
 
 echo "ok\n";

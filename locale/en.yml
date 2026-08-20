@@ -12,6 +12,8 @@ wszdb-flarumaichat:
       failures: Failed requests
       prompt_tokens: Prompt tokens
       completion_tokens: Completion tokens
+      cached_tokens: Cached prompt tokens
+      cache_hit: Cache hit rate
       total_tokens: Total tokens
       avg_tokens: Tokens per request
       since: Counting since
@@ -71,11 +73,21 @@ wszdb-flarumaichat:
       zai_heading: Z.AI / GLM
       context_heading: Site data
       context_files_label: Data files
-      context_files_help: "One path per line, relative to the Flarum installation, for example vendor/your-vendor/your-extension/resources/data.json. A JSON file holding a list of records is searched record by record: a record named in the post is handed to the model as fact. Any other file is passed as plain text, and a plain file goes to the model whole with every single answer, whatever the post is about, so only list files whose full content may leave the site. Leave empty to feed nothing."
+      context_files_help: "One path per line, relative to the Flarum installation, for example vendor/your-vendor/your-extension/resources/data.json. JSON, YAML, CSV, TSV and Markdown files are searched record by record (a Markdown file is chunked by heading): records about what the post discusses are handed to the model as compact facts, best match first, and a record's related ids pull those records in behind it. Any other file is passed as plain text, cut to the budget, and goes to the model with every single answer, whatever the post is about, so only list files whose full content may leave the site. Leave empty to feed nothing."
       linked_threads_label: Read linked threads
-      linked_threads_help: When a post links to a discussion on this forum, its posts are quoted into the prompt, so the assistant answers about the thread instead of saying it cannot open links. Up to two threads and twenty posts each, within the character budget below. Only threads the bot user may read are quoted.
+      linked_threads_help: When a post links to a discussion on this forum, its posts are quoted into the prompt, so the assistant answers about the thread instead of saying it cannot open links. Up to two threads and twenty posts each, within the character budget below. Threads are read as a guest sees the forum, and hidden, private or blocked-tag threads are never quoted.
+      thread_summaries_label: Summarize quoted threads
+      thread_summaries_help: When on, a linked or related thread is handed over as a short summary (cached until the thread changes) instead of its raw posts. Each stale summary costs one small extra API call. Default is on.
+      related_threads_label: Quote related threads
+      related_threads_help: When on, discussions whose title is about the same thing are quoted into the answer, read the same guest-way as linked threads. Title matching only. Default is off.
+      related_threads_count_label: Related threads count
+      related_threads_count_help: How many related threads to quote at most. Default is 2.
       context_chars_label: Context characters
-      context_chars_help: How much of those files, and of any linked thread, one prompt may carry, in characters (6000 is roughly 1500 tokens). Raise it only as far as the model's context window allows.
+      context_chars_help: How much of the data files, linked threads and related threads one prompt may carry, in characters (6000 is roughly 1500 tokens). Raise it only as far as the model's context window allows.
+      history_chars_label: History characters
+      history_chars_help: How much of the discussion's earlier posts one prompt may carry, newest first, in characters. Default is 8000.
+      tools_enabled_label: Let the model call tools
+      tools_enabled_help: 'Off by default. When on, the model may read a discussion by id and search discussion titles while it answers. The calls go through the same guest-side reader and tag blocks as quoted threads, and are capped at a few executions per answer. Verify your provider supports function calling together with the web search tool before turning this on.'
       web_search_label: Web search
       web_search_help: Let the model search the web while it answers. GLM models only, charged per search by z.ai, and it adds seconds to the answer.
       web_search_domains_label: Search only these domains

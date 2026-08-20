@@ -1,7 +1,15 @@
 import app from 'flarum/admin/app';
 
 export interface Stats {
-  api: { requests: number; failures: number; prompt_tokens: number; completion_tokens: number; since: number; last: number };
+  api: {
+    requests: number;
+    failures: number;
+    prompt_tokens: number;
+    completion_tokens: number;
+    cached_tokens?: number;
+    since: number;
+    last: number;
+  };
   daily: Record<string, { requests: number; failures: number; prompt_tokens: number; completion_tokens: number }>;
   posts: {
     answers: number;

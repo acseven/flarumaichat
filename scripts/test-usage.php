@@ -53,7 +53,12 @@ assert($totals['requests'] === 3, 'every call counts as a request');
 assert($totals['failures'] === 1, 'only the failed call counts as a failure');
 assert($totals['prompt_tokens'] === 1500, 'prompt tokens add up');
 assert($totals['completion_tokens'] === 300, 'completion tokens add up');
+assert($totals['cached_tokens'] === 0, 'no cached tokens were recorded yet');
 assert($totals['since'] > 0 && $totals['last'] >= $totals['since'], 'the window has both ends');
+
+// the provider reports part of the prompt as cached, and it is counted
+Usage::record(400, 50, false, $settings, cachedTokens: 250);
+assert(Usage::totals($settings)['cached_tokens'] === 250, 'cached prompt tokens add up');
 
 $since = $totals['since'];
 Usage::record(1, 1, false, $settings);

@@ -409,11 +409,42 @@ export default class ChatGptSettings extends ExtensionPage {
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.linked_threads_help'),
             })}
             {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.thread_summaries',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.thread_summaries_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.thread_summaries_help'),
+            })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.related_threads',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.related_threads_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.related_threads_help'),
+            })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.related_threads_count',
+              type: 'number',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.related_threads_count_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.related_threads_count_help'),
+            })}
+            {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.context_chars',
               type: 'number',
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.context_chars_label'),
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.context_chars_help'),
               default: 6000,
+            })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.history_chars',
+              type: 'number',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.history_chars_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.history_chars_help'),
+              default: 8000,
+            })}
+            {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.tools_enabled',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.tools_enabled_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.tools_enabled_help'),
             })}
             <h3 className="ChatGptSettings-heading">
               <i className="fas fa-robot" /> {app.translator.trans('wszdb-flarumaichat.admin.settings.zai_heading')}

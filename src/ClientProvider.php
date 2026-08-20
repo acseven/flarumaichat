@@ -24,7 +24,15 @@ class ClientProvider extends AbstractServiceProvider
         $apiKey = $settings->get('wszdb-flarumaichat.api_key');
 
         if ($apiKey) {
-            $this->container->singleton(Client::class, fn() => $this->getClient($settings));
+            $this->container->singleton(Client::class, function () use ($settings) {
+                try {
+                    return $this->getClient($settings);
+                } catch (\InvalidArgumentException $e) {
+                    resolve('log')->error('[ChatGPT] Refusing the configured base URI', ['error' => $e->getMessage()]);
+
+                    return null;
+                }
+            });
         }
 
         /** @var ExtensionManager $extensions */
@@ -76,7 +84,9 @@ class ClientProvider extends AbstractServiceProvider
     {
         $apiKey = $settings->get('wszdb-flarumaichat.api_key');
 
-        $baseUri = $settings->get('wszdb-flarumaichat.base_uri');
+        // the admin-typed base URI is checked before it reaches the client, so
+        // the setting is never a request-forgery primitive
+        $baseUri = Endpoint::assertSafe($settings->get('wszdb-flarumaichat.base_uri'));
 
         return OpenAI::factory()
             ->withApiKey($apiKey)

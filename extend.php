@@ -85,10 +85,20 @@ return [
         ->default('wszdb-flarumaichat.web_search_domains', '')
         // local data files the answer may quote from
         ->default('wszdb-flarumaichat.context_files', '')
-        // characters of local data the prompt may carry
+        // characters of local data the prompt may carry, across files,
+        // linked threads and related threads
         ->default('wszdb-flarumaichat.context_chars', 6000)
+        // characters of same-discussion history one prompt may carry
+        ->default('wszdb-flarumaichat.history_chars', 8000)
         // quote threads of this forum that a post links to
         ->default('wszdb-flarumaichat.linked_threads', true)
+        // summarize quoted threads instead of quoting them raw
+        ->default('wszdb-flarumaichat.thread_summaries', true)
+        // quote discussions about the same thing
+        ->default('wszdb-flarumaichat.related_threads', false)
+        ->default('wszdb-flarumaichat.related_threads_count', 2)
+        // let the model call tools; verify the provider first
+        ->default('wszdb-flarumaichat.tools_enabled', false)
         // new setting for answer duration in minutes (default 5)
         ->default('wszdb-flarumaichat.answer_duration', 0)
         // extra wait in seconds, added on top of the answer duration

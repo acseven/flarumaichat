@@ -29,11 +29,15 @@ trait DelaysReply
         $log = resolve('log');
 
         // ponytail: the sync queue driver runs jobs inside the posting request and
-        // throws released jobs away, so a short wait is slept out instead. It blocks
-        // that request for the same seconds; run a queue worker to make it free.
-        if ($remaining <= 60 && resolve(Queue::class) instanceof SyncQueue) {
-            $log->info('[ChatGPT Job] Waiting before answering', $context + ['wait_seconds' => $remaining]);
-            sleep($remaining);
+        // throws released jobs away, so the wait is partly slept out instead. The
+        // sleep is capped: holding a PHP worker is worse than answering early,
+        // and this install runs the database queue anyway.
+        if (resolve(Queue::class) instanceof SyncQueue) {
+            $sleep = min($remaining, 15);
+            $log->warning('[ChatGPT Job] Answering inline, sleeping part of the wait',
+                $context + ['sleep_seconds' => $sleep, 'wait_seconds' => $remaining,
+                    'note' => 'run a queue worker to answer outside the request']);
+            sleep($sleep);
 
             return false;
         }

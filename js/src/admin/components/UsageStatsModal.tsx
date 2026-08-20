@@ -54,6 +54,11 @@ export default class UsageStatsModal extends Modal {
             ['model', this.stats.model || '—'],
             ['prompt_tokens', number(api.prompt_tokens)],
             ['completion_tokens', number(api.completion_tokens)],
+            ['cached_tokens', number(api.cached_tokens || 0)],
+            [
+              'cache_hit',
+              api.prompt_tokens ? Math.round(((api.cached_tokens || 0) / api.prompt_tokens) * 100) + '%' : '—',
+            ],
             ['avg_tokens', api.requests ? number(Math.round(tokens / api.requests)) : '—'],
             ['since', stamp(api.since)],
             ['last', stamp(api.last)],

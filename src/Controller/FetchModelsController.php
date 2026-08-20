@@ -10,6 +10,7 @@ use OpenAI;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Wszdb\FlarumAiChat\Endpoint;
 
 class FetchModelsController implements RequestHandlerInterface
 {
@@ -33,6 +34,13 @@ class FetchModelsController implements RequestHandlerInterface
             return new JsonResponse([
                 'error' => 'OpenAI client not configured. Please check your API key and base URI settings.'
             ], 400);
+        }
+
+        // the same safety check the client factory runs, before anything dials out
+        try {
+            $baseUri = Endpoint::assertSafe($baseUri);
+        } catch (\InvalidArgumentException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 400);
         }
 
         try {
