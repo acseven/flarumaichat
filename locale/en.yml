@@ -72,8 +72,10 @@ wszdb-flarumaichat:
       context_heading: Site data
       context_files_label: Data files
       context_files_help: "One path per line, relative to the Flarum installation, for example vendor/acseven/chdk-cameras/resources/cameras.json. A JSON file holding a list of records is searched record by record: a record named in the post is handed to the model as fact. Any other file is passed as plain text, and a plain file goes to the model whole with every single answer, whatever the post is about, so only list files whose full content may leave the site. Leave empty to feed nothing."
+      linked_threads_label: Read linked threads
+      linked_threads_help: When a post links to a discussion on this forum, its posts are quoted into the prompt, so the assistant answers about the thread instead of saying it cannot open links. Up to two threads and twenty posts each, within the character budget below. Only threads the bot user may read are quoted.
       context_chars_label: Context characters
-      context_chars_help: How much of those files one prompt may carry, in characters (6000 is roughly 1500 tokens). Raise it only as far as the model's context window allows.
+      context_chars_help: How much of those files, and of any linked thread, one prompt may carry, in characters (6000 is roughly 1500 tokens). Raise it only as far as the model's context window allows.
       web_search_label: Web search
       web_search_help: Let the model search the web while it answers. GLM models only, charged per search by z.ai, and it adds seconds to the answer.
       web_search_domains_label: Search only these domains

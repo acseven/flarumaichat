@@ -403,6 +403,12 @@ export default class ChatGptSettings extends ExtensionPage {
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.context_files_help'),
             })}
             {this.buildSettingComponent({
+              setting: 'wszdb-flarumaichat.linked_threads',
+              type: 'boolean',
+              label: app.translator.trans('wszdb-flarumaichat.admin.settings.linked_threads_label'),
+              help: app.translator.trans('wszdb-flarumaichat.admin.settings.linked_threads_help'),
+            })}
+            {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.context_chars',
               type: 'number',
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.context_chars_label'),

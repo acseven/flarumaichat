@@ -126,7 +126,7 @@ class Agent
 
             ['role' => $role, 'prompt' => $prompt] = $this->prepareChatForMessage();
 
-            $messages = $this->createMessages($title, $content, $role, $prompt);
+            $messages = $this->createMessages($title, $content, $role, $prompt, $commentPost->content);
 
             $settings = resolve(SettingsRepositoryInterface::class);
             $userPromptId = $settings->get('wszdb-flarumaichat.user_prompt');
@@ -438,7 +438,7 @@ class Agent
         return $facts;
     }
 
-    private function createMessages($title, $content, $role, $prompt): array
+    private function createMessages($title, $content, $role, $prompt, $extra = ''): array
     {
         $prompt = str_replace(
             ['[title]', '[content]'],
@@ -447,12 +447,22 @@ class Agent
         );
         $systemPrompt = $role . ' ' . $prompt;
 
-        $facts = $this->contextFacts($title . "\n" . $content);
+        $subject = $title . "\n" . $content . "\n" . $extra;
+
+        $facts = $this->contextFacts($subject);
 
         if ($facts !== '') {
             $systemPrompt .= "\n\nFacts below come from this site's own data files. They are current and"
                 . " authoritative: prefer them over what you remember, and never name a version, file or"
                 . " link that is not in them.\n\n" . $facts;
+        }
+
+        $threads = $this->linkedThreads($subject);
+
+        if ($threads !== '') {
+            $systemPrompt .= "\n\nThe conversation links to threads on this same forum, quoted below. You have"
+                . " read them: answer about what they say, and never claim you cannot open a link to this"
+                . " forum.\n\n" . $threads;
         }
 
         // Reasoning models (o1, o3, o4, gpt-5) don't support 'system' role
@@ -477,6 +487,28 @@ class Agent
                 'content' => $content
             ]
         ];
+    }
+
+    /**
+     * The threads the post links to, when they live on this forum and the bot
+     * user may read them.
+     */
+    private function linkedThreads(string $text): string
+    {
+        $settings = resolve(SettingsRepositoryInterface::class);
+
+        if (!$settings->get('wszdb-flarumaichat.linked_threads')) {
+            return '';
+        }
+
+        $forumUrl = (string) $settings->get('forum_url');
+        $budget = (int) $settings->get('wszdb-flarumaichat.context_chars') ?: ContextFiles::MAX_TOTAL_CHARS;
+
+        $threads = (new LinkedDiscussions($this->user, $forumUrl, $budget))->factsFor($text);
+
+        resolve('log')->info('[ChatGPT] Linked threads', ['chars' => strlen($threads)]);
+
+        return $threads;
     }
 
     private function createMessageForUser($content): array
