@@ -130,6 +130,12 @@ assert(in_array('g9', $tokens, true), 'short model names are kept for the fallba
 assert(! in_array('how', $tokens, true) && ! in_array('the', $tokens, true), 'stopwords are dropped');
 assert(count($tokens) === 3, 'only the distinctive words remain');
 
+// the model numbers the FULLTEXT index is blind to
+assert(RelatedThreads::modelNumbers('IXUS 75 missing modules') === ['75'], 'a short model number is found');
+assert(RelatedThreads::modelNumbers('CHDK 1.6 on the G7 X') === ['g7'], 'a lone digit is not a model number');
+assert(RelatedThreads::modelNumbers('S5 IS and 5D and A570') === ['s5', '5d'], 'at most two, longer names left to the index');
+assert(RelatedThreads::modelNumbers('lens problem') === [], 'a title without one gets no extra ordering');
+
 // tool arguments: ids and queries from the model are never trusted
 assert(Tools::validId(12) && Tools::validId('12'), 'integer ids pass');
 assert(! Tools::validId('twelve') && ! Tools::validId(0) && ! Tools::validId(-3) && ! Tools::validId(1.5), 'anything else is refused');
