@@ -8,6 +8,9 @@
 
 use Flarum\Discussion\Discussion;
 use Flarum\Settings\SettingsRepositoryInterface;
+use Flarum\User\Guest;
+use Flarum\User\User;
+use Wszdb\FlarumAiChat\Readers;
 use Wszdb\FlarumAiChat\RelatedThreads;
 use Wszdb\FlarumAiChat\ThreadSummary;
 use Wszdb\FlarumAiChat\Tools;
@@ -22,7 +25,19 @@ if (!interface_exists(SettingsRepositoryInterface::class)) {
 }
 
 if (!class_exists(\Flarum\User\User::class)) {
-    eval('namespace Flarum\\User; class User {}');
+    eval('namespace Flarum\\User; class User {
+        public $id = 1;
+        public static $forumOpen = false;
+        public function can($permission) { return static::$forumOpen; }
+        public function isGuest() { return false; }
+    }');
+}
+
+if (!class_exists(\Flarum\User\Guest::class)) {
+    eval('namespace Flarum\\User; class Guest extends User {
+        public $id = 0;
+        public function isGuest() { return true; }
+    }');
 }
 
 if (!class_exists(Discussion::class)) {
@@ -127,6 +142,18 @@ assert(Tools::cleanQuery(42) === '', 'only strings are queries');
 $defs = Tools::definitions();
 assert(count($defs) === 2, 'the two tools are defined');
 assert($defs[0]['type'] === 'function' && $defs[0]['function']['name'] === 'read_thread', 'read_thread is first');
+
+// the cross-discussion reader: a guest when guests may read, else the asker,
+// and never the bot user — not even when there is no asker at all
+$asker = new User();
+
+User::$forumOpen = true;
+assert(Readers::crossDiscussion($asker) instanceof Guest, 'an open forum is read as a guest');
+
+User::$forumOpen = false;
+assert(Readers::crossDiscussion($asker) === $asker, 'a closed forum falls back to the asker');
+assert(Readers::crossDiscussion(null) instanceof Guest, 'no asker means a guest, never the bot');
+assert(Readers::crossDiscussion(new Guest()) instanceof Guest, 'a guest asker stays a guest');
 
 // summary cache: keyed by discussion id alone, fresh only while the markers hold
 $markers = [14881, 0, [3, 7], false];

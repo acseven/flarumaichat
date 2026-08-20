@@ -509,6 +509,8 @@ class ContextFiles
 
     private function cut(string $value, int $limit): string
     {
-        return strlen($value) <= $limit ? $value : substr($value, 0, $limit) . '…';
+        // mb_strcut, not substr: a cut through a multibyte character would make
+        // the whole request body invalid UTF-8 and lose the answer
+        return strlen($value) <= $limit ? $value : mb_strcut($value, 0, max(0, $limit)) . '…';
     }
 }

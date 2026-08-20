@@ -3,6 +3,7 @@
 namespace Wszdb\FlarumAiChat;
 
 use Flarum\Discussion\Discussion;
+use Flarum\User\Guest;
 use Flarum\User\User;
 
 /**
@@ -22,11 +23,16 @@ class Readers
         return $asker;
     }
 
-    public static function crossDiscussion(User $asker): User
+    public static function crossDiscussion(?User $asker = null): User
     {
-        $guest = User::guest();
+        $guest = new Guest();
 
-        return $guest->can('viewForum') ? $guest : $asker;
+        if ($guest->can('viewForum')) {
+            return $guest;
+        }
+
+        // never the bot user: without an asker there is nothing safer than a guest
+        return $asker && !$asker->isGuest() ? $asker : $guest;
     }
 
     /**

@@ -6,6 +6,7 @@ use Flarum\Discussion\Discussion;
 use Flarum\Post\CommentPost;
 use Flarum\Foundation\Paths;
 use Flarum\Settings\SettingsRepositoryInterface;
+use Flarum\User\Guest;
 use Flarum\User\User;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
@@ -18,11 +19,14 @@ class Agent
     protected int $maxTokens;
     protected string $model;
 
+    /** Who asked, for the reads that happen after the prompt is built (tools). */
+    private ?User $currentAsker = null;
+
     public function __construct(
         public readonly User $user,
         protected ?Client    $client = null,
-        string               $model = null,
-        int                  $maxTokens = null
+        ?string              $model = null,
+        ?int                 $maxTokens = null
     )
     {
         $this->model = $model ?? 'gpt-3.5-turbo-instruct';
@@ -144,7 +148,7 @@ class Agent
     ): array {
         $settings = resolve(SettingsRepositoryInterface::class);
         $fence = new Fence();
-        $asker = $this->asker($askerId);
+        $asker = $this->currentAsker = $this->asker($askerId);
 
         ['role' => $role, 'prompt' => $prompt] = $this->prepareChatForMessage();
 
@@ -206,9 +210,14 @@ class Agent
         );
     }
 
+    /**
+     * The member whose post is being answered. A deleted or unknown author
+     * falls back to a guest, never to the bot user, so a missing row cannot
+     * widen what the answer may quote.
+     */
     private function asker(int $userId): User
     {
-        return User::query()->find($userId) ?: $this->user;
+        return User::query()->find($userId) ?: new Guest();
     }
 
     private function prepareChatForMessage(): array
@@ -378,7 +387,7 @@ class Agent
      */
     private function runTools(array $messages, $response)
     {
-        $tools = new Tools(Readers::crossDiscussion($this->user));
+        $tools = new Tools(Readers::crossDiscussion($this->currentAsker));
         $fence = new Fence();
         $runs = 0;
 

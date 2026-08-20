@@ -40,6 +40,9 @@ class RelatedThreads
             ->where('id', '!=', $excludingId)
             // natural language mode only: no boolean operators, ever
             ->whereRaw('MATCH(title) AGAINST(? IN NATURAL LANGUAGE MODE)', [$title])
+            // the relevance score is the whole point of the match: without it the
+            // slice below is an arbitrary set of rows that merely scored above zero
+            ->orderByRaw('MATCH(title) AGAINST(? IN NATURAL LANGUAGE MODE) DESC', [$title])
             ->limit($count * 3)
             ->get()
             ->all();
