@@ -145,7 +145,7 @@ foreach ($cases as $case) {
 
     // a member asked about a camera: naming the prompt's own plumbing back at
     // them is a defect in every case, so it is graded here and not per case
-    if (preg_match('~provided (facts|text|information|material|context)|information provided|quoted (material|facts|text)|(the|my) (context|sources) (provided|given)|facts (block|provided)~i', $answer, $m)) {
+    if (preg_match('~(provided|given|quoted|supplied) (facts|text|information|material|context|data)|(facts|text|information|material|context|data) (provided|given|supplied|above|here)\b|facts block|my (sources|context|input)~i', $answer, $m)) {
         $problems[] = 'named its own input: ' . $m[0];
     }
 
