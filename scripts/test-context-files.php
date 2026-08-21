@@ -71,6 +71,25 @@ file_put_contents($base . '/data/ranked.json', json_encode([
 $ranked = $facts('ranked.json', 'Alpha and Beta: which has the better battery and port?');
 assert(strpos($ranked, 'name: Alpha') < strpos($ranked, 'name: Beta'), 'the better overlap ranks first');
 
+// a rare term beats two terms every record carries: counting hits flat ranked
+// the record sharing "camera" and "card" over the one record that names the
+// thing asked about, and then dropped that one under the flat threshold
+file_put_contents($base . '/data/idf.md', implode("\n", [
+    '## Generic one', 'Every camera and every card behaves this way.', '',
+    '## Generic two', 'Any camera on any card, again.', '',
+    '## The named call', 'set_config_value reads a CHDK menu setting.', '',
+]));
+$idf = $facts('idf.md', 'does set_config_value change the card clock on my camera?');
+assert(str_contains($idf, 'The named call'), 'a rare term must be quoted');
+assert(strpos($idf, 'The named call') < strpos($idf, 'Generic one'), 'the rare term ranks first');
+
+// a dotted version number is a term: \w{2,} alone finds no token in "1.7.0"
+file_put_contents($base . '/data/versions.md', implode("\n", [
+    '## Branches', 'The 1.6.1 branch is stable and the 1.7.0 branch is the trunk.', '',
+    '## Something else', 'Unrelated wording about nothing in particular here.', '',
+]));
+assert(str_contains($facts('versions.md', 'is 1.7.0 safe?'), 'Branches'), 'version numbers must match');
+
 // lists are flattened and capped
 file_put_contents($base . '/data/lists.json', json_encode([
     'records' => [['id' => 's100', 'name' => 'S100', 'ports' => ['usb', 'hdmi'], 'builds' => array_map(fn ($i) => "b$i", range(1, 20))]],

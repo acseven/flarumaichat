@@ -23,6 +23,12 @@ class ContextFiles
     private const SKIP_FIELDS = ['match', 'aka'];
 
     private const MAX_RECORDS = 15;
+
+    /**
+     * The overlap a record needs to be quoted, in the milli-IDF units of
+     * score(): one term carried by fewer than about six records in ten.
+     */
+    private const MIN_OVERLAP_SCORE = 500;
     private const MAX_RECORD_CHARS = 400;
     private const MAX_LIST_ITEMS = 8;
     private const MAX_FILES = 10;
@@ -283,12 +289,14 @@ class ContextFiles
     {
         $records = array_slice($records, 0, self::MAX_RECORDS_PER_FILE, true);
         $terms = $this->terms($text);
+        $weights = $this->weights($terms, $records);
         $chosen = [];
 
         foreach ($records as $index => $record) {
-            $score = $this->score($terms, $record);
+            // the score orders both paths; only the overlap path gates on it
+            $score = $this->score($terms, $record, $weights);
 
-            if ($byOverlap ? $score < 2 : !$this->mentions($text, $record)) {
+            if ($byOverlap ? $score < self::MIN_OVERLAP_SCORE : !$this->mentions($text, $record)) {
                 continue;
             }
 
@@ -335,19 +343,63 @@ class ContextFiles
      * @param string[] $terms
      * @param array<string, mixed> $record
      */
-    private function score(array $terms, array $record): int
+    /**
+     * How well one record answers the terms, in milli-units of inverse
+     * document frequency. Counting hits flat ranked a record that shares two
+     * words every record in the corpus has ("card", "camera") over the one
+     * record that names the thing asked about, and the flat threshold then
+     * dropped the second one. A term carried by every record says nothing and
+     * weighs nothing; a term only one record carries weighs the most.
+     *
+     * @param array<string, int> $weights term => milli-weight
+     */
+    private function score(array $terms, array $record, array $weights): int
     {
-        $haystack = mb_strtolower((string) (json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: ''));
-
-        $hits = 0;
+        $haystack = $this->haystack($record);
+        $score = 0;
 
         foreach ($terms as $term) {
             if (str_contains($haystack, $term)) {
-                $hits++;
+                $score += $weights[$term] ?? 0;
             }
         }
 
-        return $hits;
+        return $score;
+    }
+
+    /**
+     * The weight of each term over this corpus: 1000 * ln(records / carriers),
+     * so a term in every record is worth nothing and a term in one record is
+     * worth the most.
+     *
+     * @param array<string> $terms
+     * @param array<int, array<string, mixed>> $records
+     * @return array<string, int>
+     */
+    private function weights(array $terms, array $records): array
+    {
+        $total = max(count($records), 1);
+        $weights = [];
+
+        foreach ($terms as $term) {
+            $carriers = 0;
+
+            foreach ($records as $record) {
+                if (str_contains($this->haystack($record), $term)) {
+                    $carriers++;
+                }
+            }
+
+            $weights[$term] = $carriers === 0 ? 0 : (int) round(1000 * log($total / $carriers));
+        }
+
+        return $weights;
+    }
+
+    /** @param array<string, mixed> $record */
+    private function haystack(array $record): string
+    {
+        return mb_strtolower((string) (json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: ''));
     }
 
     /**
@@ -358,7 +410,9 @@ class ContextFiles
      */
     private function terms(string $text): array
     {
-        preg_match_all('~[\w]{2,}~u', mb_strtolower($text), $matches);
+        // a dotted version number is one term: \w{2,} alone sees no token at all
+        // in "1.7.0", and on this forum the version is the whole question
+        preg_match_all('~\d+(?:\.\d+)+|[\w]{2,}~u', mb_strtolower($text), $matches);
 
         $terms = [];
 
