@@ -149,7 +149,9 @@ class ThreadSummary
             ->limit(self::MAX_POSTS)
             ->get();
 
-        $lines = ['Thread "' . Fence::clean($discussion->title) . '":'];
+        // the id travels with the quote: without it the model has nothing to cite
+        // and calls every quoted thread "this thread"
+        $lines = ['Thread ' . (int) $discussion->id . ' "' . Fence::clean($discussion->title) . '":'];
         $spent = strlen($lines[0]);
 
         foreach ($posts as $post) {
