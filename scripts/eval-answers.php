@@ -120,6 +120,14 @@ foreach ($cases as $case) {
         }
     }
 
+    // some defects are shapes, not strings: "the ISO propcase ID is 100" cannot
+    // be caught by a substring, and it is the exact failure this eval is for
+    foreach ((array) ($case['must_not_regex'] ?? []) as $pattern) {
+        if (preg_match('~' . $pattern . '~i', $answer, $m)) {
+            $problems[] = 'matched /' . $pattern . '/: ' . $m[0];
+        }
+    }
+
     $any = (array) ($case['must_any'] ?? []);
 
     if ($any) {
