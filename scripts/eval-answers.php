@@ -140,14 +140,16 @@ foreach ($cases as $case) {
     if ($problems) {
         $fail[$id] = $problems;
         printf("FAIL %-22s %s\n", $id, implode('; ', $problems));
-
-        if (in_array('-v', $argv, true)) {
-            echo "     facts: " . strlen($block) . " chars\n";
-            echo "     " . str_replace("\n", "\n     ", trim($answer)) . "\n";
-        }
     } else {
         $pass++;
         printf("ok   %-22s\n", $id);
+    }
+
+    // -v prints the passing answers too: a bad answer that happens to carry a
+    // matched substring is exactly what this is meant to catch
+    if (in_array('-v', $argv, true)) {
+        echo "     facts: " . strlen($block) . " chars\n";
+        echo "     " . str_replace("\n", "\n     ", trim($answer)) . "\n\n";
     }
 }
 
