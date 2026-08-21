@@ -43,7 +43,8 @@ if (!is_array($cases)) {
     exit(2);
 }
 
-$only = array_slice($argv, 2);
+// flags are not case ids: -v anywhere used to filter every case away
+$only = array_values(array_filter(array_slice($argv, 2), fn ($a) => $a[0] !== '-'));
 
 if ($only) {
     $cases = array_values(array_filter($cases, fn ($c) => in_array($c['id'] ?? '', $only, true)));
