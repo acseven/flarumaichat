@@ -137,6 +137,12 @@ foreach ($cases as $case) {
         }
     }
 
+    // no case here carries a discussion, so nothing was ever quoted: a link to
+    // a thread on this forum can only have been made up
+    if (preg_match('~setepontos\.com/d/|index\.php\?topic=|/index\.php/topic,~i', $answer, $m)) {
+        $problems[] = 'invented a forum link: ' . $m[0];
+    }
+
     if ($problems) {
         $fail[$id] = $problems;
         printf("FAIL %-22s %s\n", $id, implode('; ', $problems));
