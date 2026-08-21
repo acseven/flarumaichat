@@ -20,9 +20,16 @@ class ThreadSummary
 {
     public const MAX_POSTS = 20;
 
-    private const MAX_POST_CHARS = 1200;
-    private const MAX_SUMMARY_CHARS = 600;
-    private const SUMMARY_INPUT_CHARS = 4000;
+    /**
+     * A technical post here runs to several thousand characters and the useful
+     * part is rarely in the first paragraph: a 1200-character cut handed the
+     * model the opening of a post and left it to invent the rest. The shared
+     * context budget (context_chars) is what really bounds this.
+     */
+    private const MAX_POST_CHARS = 4000;
+
+    private const MAX_SUMMARY_CHARS = 1200;
+    private const SUMMARY_INPUT_CHARS = 12000;
     private const TTL = 2592000; // 30 days
 
     public function __construct(
