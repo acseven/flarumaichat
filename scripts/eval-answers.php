@@ -60,7 +60,8 @@ if (!$client) {
     exit(2);
 }
 
-$model = (string) $settings->get('wszdb-flarumaichat.model');
+// MODEL=glm-5.3 tries another one without touching what the live forum uses
+$model = getenv('MODEL') ?: (string) $settings->get('wszdb-flarumaichat.model');
 $budget = (int) $settings->get('wszdb-flarumaichat.context_chars') ?: ContextFiles::MAX_TOTAL_CHARS;
 
 $head = trim((string) $settings->get('wszdb-flarumaichat.role')) . "\n\n" . Fence::rule();
@@ -173,6 +174,6 @@ foreach ($cases as $case) {
     }
 }
 
-printf("\n%d/%d passed\n", $pass, count($cases));
+printf("\n%d/%d passed  [%s]\n", $pass, count($cases), $model);
 
 exit($fail ? 1 : 0);
