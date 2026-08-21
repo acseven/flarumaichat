@@ -143,6 +143,12 @@ foreach ($cases as $case) {
         $problems[] = 'invented a forum link: ' . $m[0];
     }
 
+    // a member asked about a camera: naming the prompt's own plumbing back at
+    // them is a defect in every case, so it is graded here and not per case
+    if (preg_match('~provided (facts|text|information|material|context)|information provided|quoted (material|facts|text)|(the|my) (context|sources) (provided|given)|facts (block|provided)~i', $answer, $m)) {
+        $problems[] = 'named its own input: ' . $m[0];
+    }
+
     if ($problems) {
         $fail[$id] = $problems;
         printf("FAIL %-22s %s\n", $id, implode('; ', $problems));
