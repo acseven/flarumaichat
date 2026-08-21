@@ -44,9 +44,9 @@ wszdb-flarumaichat:
       user_prompt_badge_label: User Prompt Badge
       user_prompt_badge_help: Text that will be displayed next to the user prompt.
       role_label: Role
-      role_help: Select the role that will be used to generate the answer.
+      role_help: The stable head of every prompt. It is sent byte-identical on each request, so the provider caches it, and it costs almost nothing after the first answer. Put the identity and all the standing rules here.
       prompt_label: Prompt
-      prompt_help: Enter the prompt that will be used to generate the answer. [title] variable should be kept constant.
+      prompt_help: The tail, sent as the last message with the post and the quoted context. It carries [title], so it changes on each request and is never cached. Keep it short, and only for what must be fresh at the moment of the answer. Keep the [title] variable.
       enable_on_discussion_started_label: Enable on discussion started
       enable_on_discussion_started_help: The discussion will receive an answer based on content of first post when the discussion is started.
       blocked_tags_label: Blocked tags

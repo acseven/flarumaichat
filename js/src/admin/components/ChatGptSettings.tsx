@@ -301,14 +301,16 @@ export default class ChatGptSettings extends ExtensionPage {
             {/* new settings for role */}
             {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.role',
-              type: 'text',
+              type: 'textarea',
+              className: 'ChatGptSettings-promptField',
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.role_label'),
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.role_help'),
             })}
             {/* new settings for prompt */}
             {this.buildSettingComponent({
               setting: 'wszdb-flarumaichat.prompt',
-              type: 'text',
+              type: 'textarea',
+              className: 'ChatGptSettings-promptField',
               label: app.translator.trans('wszdb-flarumaichat.admin.settings.prompt_label'),
               help: app.translator.trans('wszdb-flarumaichat.admin.settings.prompt_help'),
             })}

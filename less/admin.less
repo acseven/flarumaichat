@@ -178,3 +178,13 @@
     grid-template-columns: 1fr;
   }
 }
+
+// the role and prompt fields hold a whole rulebook, not a sentence
+.ChatGptSettings-promptField textarea,
+textarea.ChatGptSettings-promptField {
+  min-height: 28em;
+  font-family: var(--code-font, monospace);
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
